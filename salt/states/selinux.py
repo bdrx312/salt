@@ -25,6 +25,10 @@ booleans can be set.
 """
 
 
+from collections.abc import Iterable
+from salt.modules.selinux import SeBool
+
+
 def __virtual__():
     """
     Only make this state available if the selinux module is available.
@@ -121,55 +125,124 @@ def mode(name):
     return ret
 
 
-def boolean(name, value, persist=False):
+def boolean(name: str, value: SeBool | None, booleans: Iterable[str|dict[str, SeBool]]|dict[str, SeBool], persist=False):
     """
     Set up an SELinux boolean
 
     name
-        The name of the boolean to set
+        The name of the boolean to set.
+        Note that this parameter is ignored if either "booleans" is passed.
 
     value
         The value to set on the boolean
+        You can install a different value for each boolean when the ``booleans``
+        argument by including the version after the boolean name:
+
+        .. code-block:: yaml
+
+            "my selinux booleans":
+              selinux.boolean:
+                - value: true
+                - booleans:
+                  - foo
+                  - bar
+                  - baz: false
+    
+    booleans
+        A list of boolean to set. All booleans
+        listed under ``booleans`` will be installed via a single command.
+
+        .. code-block:: yaml
+
+            mybooleans:
+              selinux.boolean:
+                - value: true
+                - booleans:
+                  - foo
+                  - bar
+                  - baz
+
+        value can be specified
+        in the ``booleans`` argument. For example:
+
+        .. code-block:: yaml
+
+            mypkgs:
+              selinux.boolean:
+                - value: true
+                - booleans:
+                  - foo
+                  - bar: false
+                  - baz
+
+        .. code-block:: yaml
+
+            mypkgs:
+              pkg.installed:
+                - pkgs:
+                    foo: true
+                    bar: true
+                    baz: false
 
     persist
         Defaults to False, set persist to true to make the boolean apply on a
         reboot
     """
-    ret = {"name": name, "result": True, "comment": "", "changes": {}}
-    bools = __salt__["selinux.list_sebool"]()
-    if name not in bools:
-        ret["comment"] = f"Boolean {name} is not available"
-        ret["result"] = False
-        return ret
-    rvalue = _refine_value(value)
-    if rvalue is None:
-        ret["comment"] = f"{value} is not a valid value for the boolean"
-        ret["result"] = False
-        return ret
-    state = bools[name]["State"] == rvalue
-    default = bools[name]["Default"] == rvalue
-    if persist:
-        if state and default:
-            ret["comment"] = "Boolean is in the correct state"
-            return ret
+    desired_bools = {}
+    if not booleans:
+        desired_bools[name] = value
+    elif isinstance(booleans, dict):
+        desired_bools.update(booleans)
     else:
-        if state:
-            ret["comment"] = "Boolean is in the correct state"
+        for sebool in booleans:
+            if isinstance(sebool, dict):
+                desired_bools.update(sebool)
+            else:
+                desired_bools[sebool] = value
+    ret = {"name": name, "result": True, "comment": "", "changes": {}}
+    existing_bools = __salt__["selinux.list_sebool"]()
+    comments = []
+    to_change = {}
+    for sebool_name, sebool_value in desired_bools.items():
+        if sebool_name not in existing_bools:
+            ret["comment"] = f"Boolean {sebool_name} is not available"
+            ret["result"] = False
             return ret
+        rvalue = _refine_value(sebool_value)
+        if rvalue is None:
+            ret["comment"] = f"{sebool_value} is not a valid value for the boolean {sebool_name}"
+            ret["result"] = False
+            return ret
+        state = existing_bools[name]["State"] == rvalue
+        default = existing_bools[name]["Default"] == rvalue
+        if persist and state and default:
+            comments.append(f"Boolean {sebool_name} is in the correct state")
+        elif state:
+            comments.append(f"Boolean {sebool_name} is in the correct state")
+        else:
+            to_change[sebool_name] = rvalue
+        if __opts__["test"]:
+            comments.append(f"Boolean {sebool_name} is set to be changed to {rvalue}")
+
     if __opts__["test"]:
+        ret["comment"] = "\n".join(comments)
         ret["result"] = None
-        ret["comment"] = f"Boolean {name} is set to be changed to {rvalue}"
         return ret
 
-    ret["result"] = __salt__["selinux.setsebool"](name, rvalue, persist)
+    ret["result"] = __salt__["selinux.setsebools"](to_change, persist)
     if ret["result"]:
-        ret["comment"] = f"Boolean {name} has been set to {rvalue}"
-        ret["changes"].update({"State": {"old": bools[name]["State"], "new": rvalue}})
+        # TODO
+        ret["comment"] = f"Boolean {name} has been changed."
+        ret["changes"].update(
+            {"State": {"old": existing_bools[bool_name]["State"], "new": new_value}}
+            for bool_name, new_value in to_change.items())
         if persist and not default:
+            # default = existing_bools[name]["Default"] == rvalue
             ret["changes"].update(
-                {"Default": {"old": bools[name]["Default"], "new": rvalue}}
+                {"Default": {"old": existing_bools[name]["Default"], "new": rvalue}}
             )
         return ret
+    # TODO
     ret["comment"] = f"Failed to set the boolean {name} to {rvalue}"
     return ret
 
@@ -227,9 +300,9 @@ def module(name, module_state="Enabled", version="any", **opts):
         installed_version = modules[name]["Version"]
         if not installed_version == version:
             ret["comment"] = (
-                "Module version is {} and does not match "
-                "the desired version of {} or you are "
-                "using semodule >= 2.4".format(installed_version, version)
+                f"Module version is {installed_version} and does not match "
+                f"the desired version of {version} or you are "
+                "using semodule >= 2.4"
             )
             ret["result"] = False
             return ret
@@ -607,3 +680,74 @@ def port_policy_absent(name, sel_type=None, protocol=None, port=None):
             )
             ret["changes"].update({"old": old_state, "new": new_state})
     return ret
+
+def mod_aggregate(low, chunks, running):
+    """
+    The mod_aggregate function which looks up all selinux boolean in the available
+    low chunks and merges them into a single boolean ref in the present low data
+    """
+    agg_enabled = [
+        "boolean",
+    ]
+    if low.get("fun") not in agg_enabled:
+        return low
+    # use a dict instead of a set to maintain insertion order
+    pkgs = {}
+    for chunk in chunks:
+        tag = __utils__["state.gen_tag"](chunk)
+        if tag in running:
+            # Already ran the pkg state, skip aggregation
+            continue
+        if chunk.get("state") == "pkg":
+            if "__agg__" in chunk:
+                continue
+            # Check for the same function
+            if chunk.get("fun") != low.get("fun"):
+                continue
+            # Check for the same repo
+            if chunk.get("fromrepo") != low.get("fromrepo"):
+                continue
+            # If hold exists in the chunk, do not add to aggregation
+            # otherwise all packages will be held or unheld.
+            # setting a package to be held/unheld is not as
+            # time consuming as installing/uninstalling.
+            if "hold" in chunk:
+                continue
+            # Check first if 'sources' was passed so we don't aggregate pkgs
+            # and sources together.
+            if is_sources and "sources" in chunk:
+                _combine_pkgs(pkgs, chunk["sources"])
+                chunk["__agg__"] = True
+            elif not is_sources:
+                # Pull out the pkg names!
+                if "pkgs" in chunk:
+                    _combine_pkgs(pkgs, chunk["pkgs"])
+                    chunk["__agg__"] = True
+                elif "name" in chunk:
+                    version = chunk.pop("version", None)
+                    pkgs.setdefault(chunk["name"], set()).add(version)
+                    chunk["__agg__"] = True
+    if pkgs:
+        pkg_type = "sources" if is_sources else "pkgs"
+        low_pkgs = {}
+        _combine_pkgs(low_pkgs, low.get(pkg_type, []))
+        for pkg, values in pkgs.items():
+            low_pkgs.setdefault(pkg, {None}).update(values)
+        # the value is the version for pkgs and
+        # the URI for sources
+        low_pkgs_list = [
+            name if value is None else {name: value}
+            for name, values in pkgs.items()
+            for value in values
+        ]
+        low[pkg_type] = low_pkgs_list
+    return low
+
+
+def _combine_pkgs(pkgs_dict, additional_pkgs_list):
+    for item in additional_pkgs_list:
+        if isinstance(item, str):
+            pkgs_dict.setdefault(item, {None})
+        else:
+            for pkg, version in item:
+                pkgs_dict.setdefault(pkg, {None}).add(version)

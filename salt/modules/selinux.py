@@ -10,26 +10,69 @@ Execute calls on selinux
     proper packages are installed.
 """
 
+from enum import auto, Enum
 import os
 import re
+from typing import Any, Literal, TypeAlias, TypedDict
 
 import salt.utils.decorators as decorators
 import salt.utils.files
 import salt.utils.path
 import salt.utils.stringutils
-import salt.utils.versions
 from salt.exceptions import CommandExecutionError, SaltInvocationError
 
-_SELINUX_FILETYPES = {
-    "a": "all files",
-    "f": "regular file",
-    "d": "directory",
-    "c": "character device",
-    "b": "block device",
-    "s": "socket",
-    "l": "symbolic link",
-    "p": "named pipe",
-}
+
+class SeFileType(Enum):
+    _description: str
+
+    ALL = ("a", "all files")
+    REGULAR = ("f", "regular file")
+    DIRECTORY = ("d", "directory")
+    CHAR_DEV = ("c", "character device")
+    BLOCK_DEV = ("b", "block device")
+    SOCKET = ("s", "socket")
+    SYMLINK = ("l", "symbolic link")
+    NAMED_PIPE = ("p", "named pipe")
+
+    def __new__(cls, code: str, description: str):
+        obj = object.__new__(cls)
+        obj._value_ = code
+        obj._description = description
+        return obj
+
+    @property
+    def description(self) -> str:
+        return self._description
+
+    @classmethod
+    def from_code(cls, code: str) -> "SeFileType":
+        """
+        Validate a raw string and return the matching FileType.
+        Raises SaltInvocationError on invalid codes.
+        """
+        try:
+            return cls(code)
+        except ValueError:
+            valid = ", ".join(e.value for e in cls)
+            raise SaltInvocationError(
+                f"Invalid file type code {code!r}; expected one of: {valid}"
+            )
+
+
+EmptyDict = TypedDict("EmptyDict", {})
+
+SeBool: TypeAlias = Literal["true", "on", "1", 1, "false", "off", "0", 0]
+
+
+class SeBoolDict(TypedDict):
+    State: str
+    Default: str
+    Description: str
+
+
+class SeModDict(TypedDict):
+    Enabled: bool
+    Version: str | None
 
 
 def __virtual__():
@@ -99,7 +142,7 @@ def getenforce():
         return "Disabled"
 
 
-def getconfig():
+def getconfig() -> str | None:
     """
     Return the selinux mode from the config file
 
@@ -113,15 +156,33 @@ def getconfig():
         config = "/etc/selinux/config"
         with salt.utils.files.fopen(config, "r") as _fp:
             for line in _fp:
-                line = salt.utils.stringutils.to_unicode(line)
-                if line.strip().startswith("SELINUX="):
-                    return line.split("=")[1].capitalize().strip()
+                stripped_line = salt.utils.stringutils.to_unicode(line).strip()
+                if stripped_line.startswith("SELINUX="):
+                    return line.split("=", maxsplit=1)[1].capitalize()
     except (OSError, AttributeError):
         return None
     return None
 
 
-def setenforce(mode):
+class Status(Enum):
+    disabled = auto()
+    enforcing = auto()
+    permissive = auto()
+
+    def __str__(self):
+        return self.name
+
+    @classmethod
+    def from_string(cls, value: str):
+        # Normalize the input string to lowercase and match against enum names
+        normalized_value = value.lower()
+        for status in cls:
+            if status.name == normalized_value:
+                return status
+        raise SaltInvocationError(f"No matching status for: {value}")
+
+
+def setenforce(mode: Literal["enforcing", "Enforcing", "Permissive", "permissive", "Disabled", "disabled"]):
     """
     Set the SELinux enforcing mode
 
@@ -132,34 +193,31 @@ def setenforce(mode):
         salt '*' selinux.setenforce enforcing
     """
     if isinstance(mode, str):
-        if mode.lower() == "enforcing":
-            mode = "1"
-            modestring = "enforcing"
-        elif mode.lower() == "permissive":
-            mode = "0"
-            modestring = "permissive"
-        elif mode.lower() == "disabled":
-            mode = "0"
-            modestring = "disabled"
-        else:
-            return f"Invalid mode {mode}"
-    elif isinstance(mode, int):
-        if mode:
-            mode = "1"
-        else:
-            mode = "0"
+        match mode.lower():
+            case "enforcing":
+                enforce_mode = "1"
+                modestring = "enforcing"
+            case "permissive":
+                enforce_mode = "0"
+                modestring = "permissive"
+            case "disabled":
+                enforce_mode = "0"
+                modestring = "disabled"
+            case _:
+                raise SaltInvocationError(f"Invalid mode {mode}")
     else:
-        return f"Invalid mode {mode}"
+        raise SaltInvocationError(f"Invalid mode {mode}")
 
     # enforce file does not exist if currently disabled.  Only for toggling enforcing/permissive
-    if getenforce() != "Disabled":
-        enforce = os.path.join(selinux_fs_path(), "enforce")
+    if (getenforce() != "Disabled"
+            and (_selinux_fs_path := selinux_fs_path())):
+        enforce = os.path.join(_selinux_fs_path, "enforce")
         try:
             with salt.utils.files.fopen(enforce, "w") as _fp:
-                _fp.write(salt.utils.stringutils.to_str(mode))
+                _fp.write(salt.utils.stringutils.to_str(enforce_mode))
         except OSError as exc:
-            msg = "Could not write SELinux enforce file: {0}"
-            raise CommandExecutionError(msg.format(exc))
+            msg = f"Could not write SELinux enforce file: {exc}"
+            raise CommandExecutionError(msg)
 
     config = "/etc/selinux/config"
     try:
@@ -167,19 +225,20 @@ def setenforce(mode):
             conf = _cf.read()
         try:
             with salt.utils.files.fopen(config, "w") as _cf:
-                conf = re.sub(r"\nSELINUX=.*\n", "\nSELINUX=" + modestring + "\n", conf)
+                conf = re.sub(r"\nSELINUX=.*\n", "\nSELINUX=" +
+                              modestring + "\n", conf)
                 _cf.write(salt.utils.stringutils.to_str(conf))
         except OSError as exc:
-            msg = "Could not write SELinux config file: {0}"
-            raise CommandExecutionError(msg.format(exc))
+            msg = f"Could not write SELinux config file: {exc}"
+            raise CommandExecutionError(msg)
     except OSError as exc:
-        msg = "Could not read SELinux config file: {0}"
-        raise CommandExecutionError(msg.format(exc))
+        msg = f"Could not read SELinux config file: {exc}"
+        raise CommandExecutionError(msg)
 
     return getenforce()
 
 
-def getsebool(boolean):
+def getsebool(boolean: str) -> SeBoolDict | EmptyDict:
     """
     Return the information on a specific selinux boolean
 
@@ -192,7 +251,7 @@ def getsebool(boolean):
     return list_sebool().get(boolean, {})
 
 
-def setsebool(boolean, value, persist=False):
+def setsebool(boolean: Any, value: SeBool, persist=False):
     """
     Set the value for a boolean
 
@@ -203,13 +262,13 @@ def setsebool(boolean, value, persist=False):
         salt '*' selinux.setsebool virt_use_usb off
     """
     if persist:
-        cmd = f"setsebool -P {boolean} {value}"
+        cmd = f"setsebool -P '{boolean}' '{value}'"
     else:
-        cmd = f"setsebool {boolean} {value}"
+        cmd = f"setsebool '{boolean}' '{value}'"
     return not __salt__["cmd.retcode"](cmd, python_shell=False)
 
 
-def setsebools(pairs, persist=False):
+def setsebools(pairs: dict[Any, SeBool], persist=False):
     """
     Set the value of multiple booleans
 
@@ -219,18 +278,15 @@ def setsebools(pairs, persist=False):
 
         salt '*' selinux.setsebools '{virt_use_usb: on, squid_use_tproxy: off}'
     """
-    if not isinstance(pairs, dict):
-        return {}
+    cmd = ["setsebool"]
     if persist:
-        cmd = "setsebool -P "
-    else:
-        cmd = "setsebool "
+        cmd.append("-P")
     for boolean, value in pairs.items():
-        cmd = f"{cmd} {boolean}={value}"
+        cmd.append(f"{boolean}={value}")
     return not __salt__["cmd.retcode"](cmd, python_shell=False)
 
 
-def list_sebool():
+def list_sebool() -> dict[str, SeBoolDict]:
     """
     Return a structure listing all of the selinux booleans on the system and
     what state they are in
@@ -241,21 +297,21 @@ def list_sebool():
 
         salt '*' selinux.list_sebool
     """
-    bdata = __salt__["cmd.run"]("semanage boolean -l").splitlines()
+    bdata = __salt__["cmd.run"]("semanage boolean --list").splitlines()
     ret = {}
     for line in bdata[1:]:
-        if not line.strip():
+        if not line or line.isspace():
             continue
         comps = line.split()
-        ret[comps[0]] = {
-            "State": comps[1][1:],
-            "Default": comps[3][:-1],
-            "Description": " ".join(comps[4:]),
-        }
+        ret[comps[0]] = SeBoolDict(
+            State=comps[1][1:],
+            Default=comps[3][:-1],
+            Description=" ".join(comps[4:]),
+        )
     return ret
 
 
-def getsemod(module):
+def getsemod(module) -> SeModDict | EmptyDict:
     """
     Return the information on a specific selinux module
 
@@ -270,7 +326,7 @@ def getsemod(module):
     return list_semod().get(module, {})
 
 
-def setsemod(module, state):
+def setsemod(module: Any, state: Literal["enabled", "Enabled", "disabled", "Disabled"]):
     """
     Enable or disable an SELinux module.
 
@@ -282,14 +338,17 @@ def setsemod(module, state):
 
     .. versionadded:: 2016.3.0
     """
-    if state.lower() == "enabled":
-        cmd = f"semodule -e {module}"
-    elif state.lower() == "disabled":
-        cmd = f"semodule -d {module}"
+    match state.lower():
+        case "enabled":
+            cmd = f"semodule --enable '{module}'"
+        case "disabled":
+            cmd = f"semodule --disable '{module}'"
+        case _:
+            raise SaltInvocationError(f"Invalid state {state}")
     return not __salt__["cmd.retcode"](cmd)
 
 
-def install_semod(module_path):
+def install_semod(module_path: str):
     """
     Install custom SELinux module from file
 
@@ -301,9 +360,9 @@ def install_semod(module_path):
 
     .. versionadded:: 2016.11.6
     """
-    if module_path.find("salt://") == 0:
+    if module_path.startswith("salt://"):
         module_path = __salt__["cp.cache_file"](module_path)
-    cmd = f"semodule -i {module_path}"
+    cmd = f"semodule --install '{module_path}'"
     return not __salt__["cmd.retcode"](cmd)
 
 
@@ -319,11 +378,11 @@ def remove_semod(module):
 
     .. versionadded:: 2016.11.6
     """
-    cmd = f"semodule -r {module}"
+    cmd = f"semodule --remove '{module}'"
     return not __salt__["cmd.retcode"](cmd)
 
 
-def list_semod():
+def list_semod() -> dict[str, SeModDict]:
     """
     Return a structure listing all of the selinux modules on the system and
     what state they are in
@@ -336,47 +395,17 @@ def list_semod():
 
     .. versionadded:: 2016.3.0
     """
-    helptext = __salt__["cmd.run"]("semodule -h").splitlines()
-    semodule_version = ""
-    for line in helptext:
-        if line.strip().startswith("full"):
-            semodule_version = "new"
-
-    if semodule_version == "new":
-        mdata = __salt__["cmd.run"]("semodule -lfull").splitlines()
-        ret = {}
-        for line in mdata:
-            if not line.strip():
-                continue
-            comps = line.split()
-            if len(comps) == 4:
-                ret[comps[1]] = {"Enabled": False, "Version": None}
-            else:
-                ret[comps[1]] = {"Enabled": True, "Version": None}
-    else:
-        mdata = __salt__["cmd.run"]("semodule -l").splitlines()
-        ret = {}
-        for line in mdata:
-            if not line.strip():
-                continue
-            comps = line.split()
-            if len(comps) == 3:
-                ret[comps[0]] = {"Enabled": False, "Version": comps[1]}
-            else:
-                ret[comps[0]] = {"Enabled": True, "Version": comps[1]}
+    mdata = __salt__["cmd.run"]("semodule --list-modules=full").splitlines()
+    ret = {}
+    for line in mdata:
+        if not line or line.isspace():
+            continue
+        comps = line.split()
+        if len(comps) == 4:
+            ret[comps[1]] = SeModDict(Enabled=False, Version=None)
+        else:
+            ret[comps[1]] = SeModDict(Enabled=True, Version=None)
     return ret
-
-
-def _validate_filetype(filetype):
-    """
-    .. versionadded:: 2017.7.0
-
-    Checks if the given filetype is a valid SELinux filetype
-    specification. Throws an SaltInvocationError if it isn't.
-    """
-    if filetype not in _SELINUX_FILETYPES:
-        raise SaltInvocationError(f"Invalid filetype given: {filetype}")
-    return True
 
 
 def _parse_protocol_port(name, protocol, port):
@@ -396,8 +425,8 @@ def _parse_protocol_port(name, protocol, port):
         name_parts = re.match(protocol_port_pattern, f"{protocol}/{port}")
     if not name_parts:
         raise SaltInvocationError(
-            'Invalid name "{}" format and protocol and port not provided or invalid:'
-            ' "{}" "{}".'.format(name, protocol, port)
+            f'Invalid name "{name}" format and protocol and port not provided or invalid:'
+            f' "{protocol}" "{port}".'
         )
     return name_parts.group(1), name_parts.group(2)
 
@@ -411,7 +440,7 @@ def _context_dict_to_string(context):
     return "{sel_user}:{sel_role}:{sel_type}:{sel_level}".format(**context)
 
 
-def _context_string_to_dict(context):
+def _context_string_to_dict(context: str):
     """
     .. versionadded:: 2017.7.0
 
@@ -422,7 +451,7 @@ def _context_string_to_dict(context):
             "Invalid SELinux context string: {0}. "
             + 'Expected "sel_user:sel_role:sel_type:sel_level"'
         )
-    context_list = context.split(":", 3)
+    context_list = context.split(":", maxsplit=3)
     ret = {}
     for index, value in enumerate(["sel_user", "sel_role", "sel_type", "sel_level"]):
         ret[value] = context_list[index]
@@ -437,8 +466,7 @@ def filetype_id_to_string(filetype="a"):
     human-readable version (which is also used in `semanage fcontext
     -l`).
     """
-    _validate_filetype(filetype)
-    return _SELINUX_FILETYPES.get(filetype, "error")
+    return SeFileType.from_code(filetype).description
 
 
 def fcontext_get_policy(
@@ -487,7 +515,8 @@ def fcontext_get_policy(
         "sel_level": sel_level or "[^:]+",
     }
     cmd_kwargs["filetype"] = (
-        "[[:alpha:] ]+" if filetype is None else filetype_id_to_string(filetype)
+        "[[:alpha:] ]+" if filetype is None else filetype_id_to_string(
+            filetype)
     )
     cmd = (
         "semanage fcontext -l | grep -E "
@@ -500,7 +529,8 @@ def fcontext_get_policy(
         return None
 
     parts = re.match(
-        r"^({filespec}) +([a-z ]+) (.*)$".format(**{"filespec": re.escape(name)}),
+        r"^({filespec}) +([a-z ]+) (.*)$".format(**
+                                                 {"filespec": re.escape(name)}),
         current_entry_text,
     )
     ret = {
