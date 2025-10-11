@@ -46,13 +46,36 @@ def state_name(salt_master):
         yield name
 
 
-def test_sls(salt_call_cli, salt_master, state_name):
+@pytest.fixture
+def state_name_dict_arg(salt_master):
+    name = "some-test-state"
+    sls_contents = """
+    test_foo:
+      test.succeed_with_changes:
+          name: foo
+    """
+    with salt_master.state_tree.base.temp_file(f"{name}.sls", sls_contents):
+        if not platform.is_windows() and not platform.is_darwin():
+            subprocess.run(
+                [
+                    "chown",
+                    "-R",
+                    "salt:salt",
+                    str(salt_master.state_tree.base.write_path),
+                ],
+                check=False,
+            )
+        yield name
+
+
+@pytest.mark.parametrize("fixture_name", ["state_name", "state_name_dict_arg"])
+def test_sls(salt_call_cli, salt_master, fixture_name):
     """
     Test calling a sls file
     """
     assert salt_master.is_running()
 
-    ret = salt_call_cli.run("state.apply", state_name)
+    ret = salt_call_cli.run("state.apply", fixture_name)
     assert ret.returncode == 0
     assert ret.data
     sls_ret = ret.data[next(iter(ret.data))]
