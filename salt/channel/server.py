@@ -797,9 +797,7 @@ class ReqServerChannel:
             if "token" in load:
                 try:
                     mtoken = self.master_key.decrypt(load["token"], enc_algo)
-                    aes = "{}_|-{}".format(
-                        salt.master.SMaster.secrets["aes"]["secret"].value, mtoken
-                    )
+                    aes = f"{salt.master.SMaster.secrets['aes']['secret'].value}_|-{mtoken}"
                 except UnsupportedAlgorithm as exc:
                     log.info(
                         "Minion %s tried to authenticate with unsupported encryption algorithm: %s",

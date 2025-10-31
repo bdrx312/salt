@@ -326,7 +326,7 @@ class Runner(RunnerClient):
                     )
                 # Attempt to grab documentation
                 if "fun" in low:
-                    ret = self.get_docs("{}*".format(low["fun"]))
+                    ret = self.get_docs(f"{low['fun']}*")
                 else:
                     ret = None
 

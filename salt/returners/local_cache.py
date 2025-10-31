@@ -186,9 +186,7 @@ def save_load(jid, clear_load, minions=None, recurse_count=0):
     as for salt-ssh)
     """
     if recurse_count >= 5:
-        err = "save_load could not write job cache file after {} retries.".format(
-            recurse_count
-        )
+        err = f"save_load could not write job cache file after {recurse_count} retries."
         log.error(err)
         raise salt.exceptions.SaltCacheError(err)
 

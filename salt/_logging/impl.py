@@ -122,13 +122,9 @@ class SaltColorLogRecord(SaltLogRecord):
         clevel = LOG_COLORS["levels"].get(self.levelname, reset)
         cmsg = LOG_COLORS["msgs"].get(self.levelname, reset)
 
-        self.colorname = "{}[{:<17}]{}".format(
-            LOG_COLORS["name"], str(self.name), reset
-        )
+        self.colorname = f"{LOG_COLORS['name']}[{str(self.name):<17}]{reset}"
         self.colorlevel = f"{clevel}[{str(self.levelname):<8}]{reset}"
-        self.colorprocess = "{}[{:>5}]{}".format(
-            LOG_COLORS["process"], str(self.process), reset
-        )
+        self.colorprocess = f"{LOG_COLORS['process']}[{str(self.process):>5}]{reset}"
         self.colormsg = f"{cmsg}{self.getMessage()}{reset}"
 
 
@@ -275,9 +271,7 @@ class SaltLoggingClass(LOGGING_LOGGER_CLASS, metaclass=LoggingMixinMeta):
             elif not isinstance(exc_info_on_loglevel, int):
                 raise RuntimeError(
                     "The value of 'exc_info_on_loglevel' needs to be a "
-                    "logging level or a logging level name, not '{}'".format(
-                        exc_info_on_loglevel
-                    )
+                    f"logging level or a logging level name, not '{exc_info_on_loglevel}'"
                 )
         # XXX: extra is never None
         if extra is None:
@@ -1092,18 +1086,9 @@ def __global_logging_exception_handler(
     # Log the exception
     msg = "An un-handled exception was caught by Salt's global exception handler:"
     try:
-        msg = "{}\n{}: {}\n{}".format(
-            msg,
-            exc_type.__name__,
-            exc_value,
-            "".join(_format_exception(exc_type, exc_value, exc_traceback)).strip(),
-        )
+        msg = f"{msg}\n{exc_type.__name__}: {exc_value}\n{''.join(_format_exception(exc_type, exc_value, exc_traceback)).strip()}"
     except Exception:  # pylint: disable=broad-except
-        msg = "{}\n{}: {}\n(UNABLE TO FORMAT TRACEBACK)".format(
-            msg,
-            exc_type.__name__,
-            exc_value,
-        )
+        msg = f"{msg}\n{exc_type.__name__}: {exc_value}\n(UNABLE TO FORMAT TRACEBACK)"
     try:
         _logger.error(msg)
     except Exception:  # pylint: disable=broad-except

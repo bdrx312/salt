@@ -595,9 +595,7 @@ class Client:
                 return dest
             except Exception as exc:  # pylint: disable=broad-except
                 raise MinionError(
-                    "Could not retrieve {} from FTP server. Exception: {}".format(
-                        url, exc
-                    )
+                    f"Could not retrieve {url} from FTP server. Exception: {exc}"
                 )
 
         if url_data.scheme == "swift":
@@ -804,9 +802,7 @@ class Client:
                     os.remove(dest_tmp)
                 return dest
             if "handle" not in query:
-                raise MinionError(
-                    "Error: {} reading {}".format(query["error"], url_data.path)
-                )
+                raise MinionError(f"Error: {query['error']} reading {url_data.path}")
             if no_cache:
                 if write_body[2]:
                     return "".join(result)

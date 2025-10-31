@@ -346,9 +346,9 @@ class LocalClient:
             return pub_data
 
         if self.opts.get("order_masters"):
-            self.event.subscribe("syndic/.*/{}".format(pub_data["jid"]), "regex")
+            self.event.subscribe(f"syndic/.*/{pub_data['jid']}", "regex")
 
-        self.event.subscribe("salt/job/{}".format(pub_data["jid"]))
+        self.event.subscribe(f"salt/job/{pub_data['jid']}")
 
         return pub_data
 
@@ -842,13 +842,13 @@ class LocalClient:
                 except KeyboardInterrupt:
                     raise SystemExit(
                         "\n"
-                        "This job's jid is: {0}\n"
+                        f"This job's jid is: {self.pub_data['jid']}\n"
                         "Exiting gracefully on Ctrl-c\n"
                         "The minions may not have all finished running and any "
                         "remaining minions will return upon completion. To look "
                         "up the return data for this job later, run the following "
                         "command:\n\n"
-                        "salt-run jobs.lookup_jid {0}".format(self.pub_data["jid"])
+                        f"salt-run jobs.lookup_jid {self.pub_data['jid']}"
                     )
         finally:
             if not was_listening:
@@ -1109,7 +1109,7 @@ class LocalClient:
             yield raw
 
     def returns_for_job(self, jid):
-        return self.returners["{}.get_load".format(self.opts["master_job_cache"])](jid)
+        return self.returners[f"{self.opts['master_job_cache']}.get_load"](jid)
 
     def get_iter_returns(
         self,
@@ -1268,9 +1268,7 @@ class LocalClient:
                 if "jid" not in jinfo:
                     jinfo_iter = []
                 else:
-                    jinfo_iter = self.get_returns_no_block(
-                        "salt/job/{}".format(jinfo["jid"])
-                    )
+                    jinfo_iter = self.get_returns_no_block(f"salt/job/{jinfo['jid']}")
                 timeout_at = time.time() + gather_job_timeout
                 # if you are a syndic, wait a little longer
                 if self.opts["order_masters"]:
@@ -1399,16 +1397,13 @@ class LocalClient:
         ret = {}
         # Check to see if the jid is real, if not return the empty dict
         try:
-            if (
-                self.returners["{}.get_load".format(self.opts["master_job_cache"])](jid)
-                == {}
-            ):
+            if self.returners[f"{self.opts['master_job_cache']}.get_load"](jid) == {}:
                 log.warning("jid does not exist")
                 return ret
         except Exception as exc:  # pylint: disable=broad-except
             raise SaltClientError(
-                "Master job cache returner [{}] failed to verify jid. "
-                "Exception details: {}".format(self.opts["master_job_cache"], exc)
+                f"Master job cache returner [{self.opts['master_job_cache']}] failed to verify jid. "
+                f"Exception details: {exc}"
             )
 
         # Wait for the hosts to check in
@@ -1450,14 +1445,10 @@ class LocalClient:
         event_iter = self.get_event_iter_returns(jid, minions, timeout=timeout)
 
         try:
-            data = self.returners["{}.get_jid".format(self.opts["master_job_cache"])](
-                jid
-            )
+            data = self.returners[f"{self.opts['master_job_cache']}.get_jid"](jid)
         except Exception as exc:  # pylint: disable=broad-except
             raise SaltClientError(
-                "Returner {} could not fetch jid data. Exception details: {}".format(
-                    self.opts["master_job_cache"], exc
-                )
+                f"Returner {self.opts['master_job_cache']} could not fetch jid data. Exception details: {exc}"
             )
         for minion in data:
             m_data = {}
@@ -1502,14 +1493,12 @@ class LocalClient:
         ret = {}
 
         try:
-            data = self.returners["{}.get_jid".format(self.opts["master_job_cache"])](
-                jid
-            )
+            data = self.returners[f"{self.opts['master_job_cache']}.get_jid"](jid)
         except Exception as exc:  # pylint: disable=broad-except
             raise SaltClientError(
                 "Could not examine master job cache. "
-                "Error occurred in {} returner. "
-                "Exception details: {}".format(self.opts["master_job_cache"], exc)
+                f"Error occurred in {self.opts['master_job_cache']} returner. "
+                f"Exception details: {exc}"
             )
         for minion in data:
             m_data = {}
@@ -1558,18 +1547,13 @@ class LocalClient:
         ret = {}
         # Check to see if the jid is real, if not return the empty dict
         try:
-            if (
-                self.returners["{}.get_load".format(self.opts["master_job_cache"])](jid)
-                == {}
-            ):
+            if self.returners[f"{self.opts['master_job_cache']}.get_load"](jid) == {}:
                 log.warning("jid does not exist")
                 return ret
         except Exception as exc:  # pylint: disable=broad-except
             raise SaltClientError(
                 "Load could not be retrieved from "
-                "returner {}. Exception details: {}".format(
-                    self.opts["master_job_cache"], exc
-                )
+                f"returner {self.opts['master_job_cache']}. Exception details: {exc}"
             )
         # Wait for the hosts to check in
         while True:
@@ -1707,9 +1691,7 @@ class LocalClient:
                                         " any remaining minions will return upon"
                                         " completion. To look up the return data for"
                                         " this job later, run the following"
-                                        " command:\n\nsalt-run jobs.lookup_jid {}".format(
-                                            jid
-                                        )
+                                        f" command:\n\nsalt-run jobs.lookup_jid {jid}"
                                     ),
                                     "retcode": salt.defaults.exitcodes.EX_GENERIC,
                                 }
@@ -1734,10 +1716,7 @@ class LocalClient:
 
         found = set()
         # Check to see if the jid is real, if not return the empty dict
-        if (
-            self.returners["{}.get_load".format(self.opts["master_job_cache"])](jid)
-            == {}
-        ):
+        if self.returners[f"{self.opts['master_job_cache']}.get_load"](jid) == {}:
             log.warning("jid does not exist")
             yield {}
             # stop the iteration, since the jid is invalid
@@ -1809,7 +1788,7 @@ class LocalClient:
         # If an external job cache is specified add it to the ret list
         if self.opts.get("ext_job_cache"):
             if ret:
-                ret += ",{}".format(self.opts["ext_job_cache"])
+                ret += f",{self.opts['ext_job_cache']}"
             else:
                 ret = self.opts["ext_job_cache"]
 
@@ -1887,10 +1866,7 @@ class LocalClient:
             tgt, fun, arg, tgt_type, ret, jid, timeout, **kwargs
         )
 
-        master_uri = "tcp://{}:{}".format(
-            salt.utils.network.ip_bracket(self.opts["interface"]),
-            str(self.opts["ret_port"]),
-        )
+        master_uri = f"tcp://{salt.utils.network.ip_bracket(self.opts['interface'])}:{str(self.opts['ret_port'])}"
 
         with salt.channel.client.ReqChannel.factory(
             self.opts, crypt="clear", master_uri=master_uri

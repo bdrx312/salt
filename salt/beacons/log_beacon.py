@@ -125,7 +125,7 @@ def beacon(config):
             if not config["tags"][tag]["regex"]:
                 continue
             try:
-                d[tag] = re.compile(r"{}".format(config["tags"][tag]["regex"]))
+                d[tag] = re.compile(f"{config['tags'][tag]['regex']}")
             except Exception as e:  # pylint: disable=broad-except
                 event = SKEL.copy()
                 event["tag"] = tag

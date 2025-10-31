@@ -64,9 +64,7 @@ def jid_to_time(jid):
     second = jid[12:14]
     micro = jid[14:20]
 
-    ret = "{}, {} {} {}:{}:{}.{}".format(
-        year, months[int(month)], day, hour, minute, second, micro
-    )
+    ret = f"{year}, {months[int(month)]} {day} {hour}:{minute}:{second}.{micro}"
     return ret
 
 

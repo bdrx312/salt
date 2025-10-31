@@ -136,11 +136,7 @@ def _fetch_option(cfg, ret_config, virtualname, attr_name):
     # Using ret_config to override the default configuration key
     ret_cfg = cfg(f"{ret_config}.{virtualname}", {})
 
-    override_default_cfg_key = "{}.{}.{}".format(
-        ret_config,
-        virtualname,
-        attr_name,
-    )
+    override_default_cfg_key = f"{ret_config}.{virtualname}.{attr_name}"
     override_cfg_default = cfg(override_default_cfg_key)
 
     # Look for the configuration item in the override location

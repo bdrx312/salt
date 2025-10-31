@@ -152,9 +152,7 @@ class TextFormat:
             self.codes.extend((codes["extended"], "2"))
             self.codes.extend(*qualify_triple_int(kwargs["bg_rgb"]))
 
-        self.sequence = "{}{}{}".format(
-            graph_prefix, ";".join(self.codes), graph_suffix
-        )
+        self.sequence = f"{graph_prefix}{';'.join(self.codes)}{graph_suffix}"
 
     def __call__(self, text, reset=True):
         """

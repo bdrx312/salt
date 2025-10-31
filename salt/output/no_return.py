@@ -32,15 +32,11 @@ class NestDisplay:
         if isinstance(ret, str):
             lines = ret.split("\n")
             for line in lines:
-                out += "{}{}{}{}{}\n".format(
-                    self.colors["RED"], " " * indent, prefix, line, self.colors["ENDC"]
-                )
+                out += f"{self.colors['RED']}{' ' * indent}{prefix}{line}{self.colors['ENDC']}\n"
         elif isinstance(ret, dict):
             for key in sorted(ret):
                 val = ret[key]
-                out += "{}{}{}{}{}:\n".format(
-                    self.colors["CYAN"], " " * indent, prefix, key, self.colors["ENDC"]
-                )
+                out += f"{self.colors['CYAN']}{' ' * indent}{prefix}{key}{self.colors['ENDC']}:\n"
                 out = self.display(val, indent + 4, "", out)
         return out
 

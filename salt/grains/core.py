@@ -81,9 +81,7 @@ except ImportError:  # Define freedesktop_os_release for Python < 3.10
             except OSError as error:
                 errno = error.errno
         else:
-            raise OSError(
-                errno, "Unable to read files {}".format(", ".join(os_release_files))
-            )
+            raise OSError(errno, f"Unable to read files {', '.join(os_release_files)}")
 
         return ret
 
@@ -872,7 +870,7 @@ def _virtual(osdata):
         if not cmd:
             continue
 
-        cmd = "{} {}".format(cmd, " ".join(args))
+        cmd = f"{cmd} {' '.join(args)}"
 
         try:
             ret = __salt__["cmd.run_all"](cmd)
@@ -1059,9 +1057,7 @@ def _virtual(osdata):
                 grains["virtual"] = "LDOM"
                 roles = []
                 for role in ("control", "io", "root", "service"):
-                    subtype_cmd = "{} -c current get -H -o value {}-role".format(
-                        command, role
-                    )
+                    subtype_cmd = f"{command} -c current get -H -o value {role}-role"
                     ret = __salt__["cmd.run"](f"{subtype_cmd}")
                     if ret == "true":
                         roles.append(role)
@@ -1332,8 +1328,8 @@ def _virtual_hv(osdata):
         for fn in ("major", "minor", "extra"):
             with salt.utils.files.fopen(f"/sys/hypervisor/version/{fn}", "r") as fhr:
                 version[fn] = salt.utils.stringutils.to_unicode(fhr.read().strip())
-        grains["virtual_hv_version"] = "{}.{}{}".format(
-            version["major"], version["minor"], version["extra"]
+        grains["virtual_hv_version"] = (
+            f"{version['major']}.{version['minor']}{version['extra']}"
         )
         grains["virtual_hv_version_info"] = [
             version["major"],
@@ -2138,9 +2134,7 @@ def _linux_lsb_distrib_data():
         release = lsb_release.get_distro_information()
         for key, value in release.items():
             key = key.lower()
-            lsb_param = "lsb_{}{}".format(
-                "" if key.startswith("distrib_") else "distrib_", key
-            )
+            lsb_param = f"lsb_{'' if key.startswith('distrib_') else 'distrib_'}{key}"
             grains[lsb_param] = value
     # Catch a NameError to workaround possible breakage in lsb_release
     # See https://github.com/saltstack/salt/issues/37867
@@ -2734,9 +2728,7 @@ def os_data():
             osrelease_info[idx] = int(value)
         grains["osrelease_info"] = tuple(osrelease_info)
 
-        grains["osfinger"] = "{os}-{ver}".format(
-            os=grains["os"], ver=grains["osrelease"]
-        )
+        grains["osfinger"] = f"{grains['os']}-{grains['osrelease']}"
 
         grains["init"] = "Windows"
 
@@ -2770,7 +2762,7 @@ def os_data():
         elif os.path.isfile("/etc/release"):
             grains.update(_sunos_release())
         else:
-            grains["os"] = "Unknown {}".format(grains["kernel"])
+            grains["os"] = f"Unknown {grains['kernel']}"
         grains.update(_sunos_cpudata())
     elif grains["kernel"] == "VMkernel":
         grains["os"] = "ESXi"

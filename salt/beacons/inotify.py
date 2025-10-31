@@ -168,7 +168,7 @@ def validate(config):
                                 return (
                                     False,
                                     "Configuration for inotify beacon invalid mask"
-                                    " option {}.".format(mask),
+                                    f" option {mask}.",
                                 )
     return True, "Valid beacon configuration"
 

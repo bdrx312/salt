@@ -62,9 +62,7 @@ def validate(config):
                         if not isinstance(args_kwargs_dict[key], list):
                             return (
                                 False,
-                                "kwargs key for fun {} must be list of key value pairs".format(
-                                    fun
-                                ),
+                                f"kwargs key for fun {fun} must be list of key value pairs",
                             )
                         for key_value in args_kwargs_dict[key]:
                             if not isinstance(key_value, dict):

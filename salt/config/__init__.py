@@ -2057,7 +2057,7 @@ def _append_domain(opts):
     # Trailing dot should mean an FQDN that is terminated, leave it alone.
     if opts["id"].endswith("."):
         return opts["id"]
-    return "{0[id]}.{0[append_domain]}".format(opts)
+    return f"{opt['id']}.{opt['append_domain']}"
 
 
 def _read_conf_file(path):
@@ -2081,7 +2081,7 @@ def _read_conf_file(path):
                 raise salt.exceptions.SaltConfigurationError(message)
 
     if append_file_suffix_YAMLError:
-        message = "Renaming to {}".format(path + "YAMLError")
+        message = f"Renaming to {path}YAMLError"
         log.error(message)
         os.replace(path, path + "YAMLError")
 
@@ -2089,8 +2089,8 @@ def _read_conf_file(path):
     # which might have been caused by invalid yaml syntax
     if not isinstance(conf_opts, dict):
         message = (
-            "Error parsing configuration file: {} - conf "
-            "should be a document, not {}.".format(path, type(conf_opts))
+            f"Error parsing configuration file: {path} - conf "
+            f"should be a document, not {type(conf_opts)}."
         )
         log.error(message)
         raise salt.exceptions.SaltConfigurationError(message)
@@ -2843,8 +2843,8 @@ def apply_cloud_config(overrides, defaults=None):
                 for detail in details:
                     if "driver" not in detail:
                         raise salt.exceptions.SaltCloudConfigError(
-                            "The cloud provider alias '{}' has an entry "
-                            "missing the required setting of 'driver'.".format(alias)
+                            f"The cloud provider alias '{alias}' has an entry "
+                            "missing the required setting of 'driver'."
                         )
 
                     driver = detail["driver"]
@@ -2861,8 +2861,8 @@ def apply_cloud_config(overrides, defaults=None):
             elif isinstance(details, dict):
                 if "driver" not in details:
                     raise salt.exceptions.SaltCloudConfigError(
-                        "The cloud provider alias '{}' has an entry "
-                        "missing the required setting of 'driver'".format(alias)
+                        f"The cloud provider alias '{alias}' has an entry "
+                        "missing the required setting of 'driver'"
                     )
 
                 driver = details["driver"]
@@ -2952,8 +2952,8 @@ def apply_vm_profiles_config(providers, overrides, defaults=None):
             continue
         if not isinstance(val, dict):
             raise salt.exceptions.SaltCloudConfigError(
-                "The VM profiles configuration found in '{0[conf_file]}' is "
-                "not in the proper format".format(config)
+                f"The VM profiles configuration found in '{config['conf_file']}' is "
+                "not in the proper format"
             )
         val["profile"] = key
         vms[key] = val
@@ -2995,7 +2995,7 @@ def apply_vm_profiles_config(providers, overrides, defaults=None):
             providers[details["provider"]][driver].setdefault("profiles", {}).update(
                 {profile: details}
             )
-            details["provider"] = "{0[provider]}:{1}".format(details, driver)
+            details["provider"] = f"{details['provider']}:{driver}"
             vms[profile] = details
 
             continue
@@ -3036,7 +3036,7 @@ def apply_vm_profiles_config(providers, overrides, defaults=None):
                 {profile: extended}
             )
 
-            extended["provider"] = "{0[provider]}:{1}".format(extended, driver)
+            extended["provider"] = f"{extended['provider']}:{driver}"
         else:
             alias, driver = extended["provider"].split(":")
             if alias not in providers or driver not in providers[alias]:
@@ -3136,8 +3136,8 @@ def apply_cloud_providers_config(overrides, defaults=None):
                         "forth."
                     )
                     raise salt.exceptions.SaltCloudConfigError(
-                        "The cloud provider alias '{0}' has multiple entries "
-                        "for the '{1[driver]}' driver.".format(key, details)
+                        f"The cloud provider alias '{key}' has multiple entries "
+                        f"for the '{details['driver']}' driver."
                     )
                 handled_providers.add(details["driver"])
 
@@ -3171,21 +3171,17 @@ def apply_cloud_providers_config(overrides, defaults=None):
                     alias, provider = extends.split(":")
                     if alias not in providers:
                         raise salt.exceptions.SaltCloudConfigError(
-                            "The '{0}' cloud provider entry in '{1}' is "
-                            "trying to extend data from '{2}' though "
-                            "'{2}' is not defined in the salt cloud "
-                            "providers loaded data.".format(
-                                details["driver"], provider_alias, alias
-                            )
+                            f"The '{details['driver']}' cloud provider entry in '{provider_alias}' is "
+                            f"trying to extend data from '{alias}' though "
+                            f"'{alias}' is not defined in the salt cloud "
+                            "providers loaded data."
                         )
 
                     if provider not in providers.get(alias):
                         raise salt.exceptions.SaltCloudConfigError(
-                            "The '{0}' cloud provider entry in '{1}' is "
-                            "trying to extend data from '{2}:{3}' though "
-                            "'{3}' is not defined in '{1}'".format(
-                                details["driver"], provider_alias, alias, provider
-                            )
+                            f"The '{details['driver']}' cloud provider entry in '{provider_alias}' is "
+                            f"trying to extend data from '{alias}:{provider}' though "
+                            f"'{provider}' is not defined in '{provider_alias}'"
                         )
                     details["extends"] = f"{alias}:{provider}"
                     # change provider details '-only-extendable-' to extended
@@ -3193,26 +3189,22 @@ def apply_cloud_providers_config(overrides, defaults=None):
                     details["driver"] = provider
                 elif providers.get(extends):
                     raise salt.exceptions.SaltCloudConfigError(
-                        "The '{}' cloud provider entry in '{}' is "
-                        "trying to extend from '{}' and no provider was "
-                        "specified. Not extending!".format(
-                            details["driver"], provider_alias, extends
-                        )
+                        f"The '{details['driver']}' cloud provider entry in '{provider_alias}' is "
+                        f"trying to extend from '{extends}' and no provider was "
+                        "specified. Not extending!"
                     )
                 elif extends not in providers:
                     raise salt.exceptions.SaltCloudConfigError(
-                        "The '{0}' cloud provider entry in '{1}' is "
-                        "trying to extend data from '{2}' though '{2}' "
+                        f"The '{details['driver']}' cloud provider entry in '{provider_alias}' is "
+                        f"trying to extend data from '{extends}' though '{extends}' "
                         "is not defined in the salt cloud providers loaded "
-                        "data.".format(details["driver"], provider_alias, extends)
+                        "data."
                     )
                 else:
                     if driver in providers.get(extends):
                         details["extends"] = f"{extends}:{driver}"
                     elif "-only-extendable-" in providers.get(extends):
-                        details["extends"] = "{}:{}".format(
-                            extends, f"-only-extendable-{ext_count}"
-                        )
+                        details["extends"] = f"{extends}:-only-extendable-{ext_count}"
                     else:
                         # We're still not aware of what we're trying to extend
                         # from. Let's try on next iteration

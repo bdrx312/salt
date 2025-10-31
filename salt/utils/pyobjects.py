@@ -93,9 +93,7 @@ class Registry:
         if id_ in attr:
             if state.full_func in attr[id_]:
                 raise DuplicateState(
-                    "A state with id ''{}'', type ''{}'' exists".format(
-                        id_, state.full_func
-                    )
+                    f"A state with id ''{id_}'', type ''{state.full_func}'' exists"
                 )
         else:
             attr[id_] = OrderedDict()
@@ -178,9 +176,7 @@ class StateFactory:
     def __getattr__(self, func):
         if self.valid_funcs and func not in self.valid_funcs:
             raise InvalidFunction(
-                "The function '{}' does not exist in the StateFactory for '{}'".format(
-                    func, self.module
-                )
+                f"The function '{func}' does not exist in the StateFactory for '{self.module}'"
             )
 
         def make_state(id_, **kwargs):

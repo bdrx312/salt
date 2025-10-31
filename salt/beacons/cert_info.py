@@ -135,10 +135,7 @@ def beacon(config):
                     "cert_path": cert_path,
                     "issuer": ",".join(
                         [
-                            '{}="{}"'.format(
-                                t[0].decode(encoding="UTF-8"),
-                                t[1].decode(encoding="UTF-8"),
-                            )
+                            f'{t[0].decode(encoding="UTF-8")}="{t[1].decode(encoding="UTF-8")}"'
                             for t in cert.get_issuer().get_components()
                         ]
                     ),
@@ -158,10 +155,7 @@ def beacon(config):
                     ),
                     "subject": ",".join(
                         [
-                            '{}="{}"'.format(
-                                t[0].decode(encoding="UTF-8"),
-                                t[1].decode(encoding="UTF-8"),
-                            )
+                            f'{t[0].decode(encoding="UTF-8")}="{t[1].decode(encoding="UTF-8")}"'
                             for t in cert.get_subject().get_components()
                         ]
                     ),

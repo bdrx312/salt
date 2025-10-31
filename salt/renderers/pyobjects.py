@@ -392,9 +392,7 @@ def render(template, saltenv="base", sls="", salt_data=True, context=None, **kwa
         mod_locals = {}
         mod_camel = "".join([part.capitalize() for part in mod.split("_")])
         valid_funcs = "','".join(__context__["pyobjects_states"][mod])
-        mod_cmd = "{} = StateFactory('{!s}', valid_funcs=['{}'])".format(
-            mod_camel, mod, valid_funcs
-        )
+        mod_cmd = f"{mod_camel} = StateFactory('{mod!s}', valid_funcs=['{valid_funcs}'])"
         exec(mod_cmd, mod_globals, mod_locals)
 
         _globals[mod_camel] = mod_locals[mod_camel]

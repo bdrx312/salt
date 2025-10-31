@@ -74,7 +74,7 @@ class LoadAuth:
         """
         if "eauth" not in load:
             return ""
-        fstr = "{}.auth".format(load["eauth"])
+        fstr = f"{load['eauth']}.auth"
         if fstr not in self.auth:
             return ""
         try:
@@ -92,7 +92,7 @@ class LoadAuth:
         """
         if "eauth" not in load:
             return False
-        fstr = "{}.auth".format(load["eauth"])
+        fstr = f"{load['eauth']}.auth"
         if fstr not in self.auth:
             return False
         # When making auth calls, only username, password, auth, and token
@@ -161,7 +161,7 @@ class LoadAuth:
         """
         if "eauth" not in load:
             return auth_list
-        fstr = "{}.process_acl".format(load["eauth"])
+        fstr = f"{load['eauth']}.process_acl"
         if fstr not in self.auth:
             return auth_list
         try:
@@ -177,7 +177,7 @@ class LoadAuth:
         """
         if "eauth" not in load:
             return False
-        fstr = "{}.groups".format(load["eauth"])
+        fstr = f"{load['eauth']}.groups"
         if fstr not in self.auth:
             return False
         fcall = salt.utils.args.format_call(
@@ -235,9 +235,7 @@ class LoadAuth:
         if groups:
             tdata["groups"] = groups
 
-        return self.tokens["{}.mk_token".format(self.opts["eauth_tokens"])](
-            self.opts, tdata
-        )
+        return self.tokens[f"{self.opts['eauth_tokens']}.mk_token"](self.opts, tdata)
 
     def get_tok(self, tok):
         """
@@ -246,7 +244,7 @@ class LoadAuth:
         """
         tdata = {}
         try:
-            tdata = self.tokens["{}.get_token".format(self.opts["eauth_tokens"])](
+            tdata = self.tokens[f"{self.opts['eauth_tokens']}.get_token"](
                 self.opts, tok
             )
         except salt.exceptions.SaltDeserializationError:
@@ -274,15 +272,13 @@ class LoadAuth:
         """
         List all tokens in eauth_tokens storage.
         """
-        return self.tokens["{}.list_tokens".format(self.opts["eauth_tokens"])](
-            self.opts
-        )
+        return self.tokens[f"{self.opts['eauth_tokens']}.list_tokens"](self.opts)
 
     def rm_token(self, tok):
         """
         Remove the given token from token storage.
         """
-        self.tokens["{}.rm_token".format(self.opts["eauth_tokens"])](self.opts, tok)
+        self.tokens[f"{self.opts['eauth_tokens']}.rm_token"](self.opts, tok)
 
     def authenticate_token(self, load):
         """
@@ -466,9 +462,7 @@ class LoadAuth:
             if not self.authenticate_eauth(load):
                 ret["error"] = {
                     "name": "EauthAuthenticationError",
-                    "message": 'Authentication failure of type "eauth" occurred for user {}.'.format(
-                        username
-                    ),
+                    "message": f'Authentication failure of type "eauth" occurred for user {username}.',
                 }
                 return ret
 
@@ -542,9 +536,7 @@ class Resolver:
         fstr = f"{eauth}.auth"
         if fstr not in self.auth:
             print(
-                'The specified external authentication system "{}" is not available'.format(
-                    eauth
-                )
+                f'The specified external authentication system "{eauth}" is not available'
             )
             print(
                 "Available eauth types: {}".format(

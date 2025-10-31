@@ -87,9 +87,7 @@ def wait_lock(lk_fn, dest, wait_timeout=0):
         if timeout:
             if time.time() > timeout:
                 raise ValueError(
-                    "Timeout({}s) for {} (lock: {}) elapsed".format(
-                        wait_timeout, dest, lk_fn
-                    )
+                    f"Timeout({wait_timeout}s) for {dest} (lock: {lk_fn}) elapsed"
                 )
     return False
 
@@ -613,7 +611,7 @@ class Fileserver:
         fnd = self.find_file(load["path"], load["saltenv"])
         if not fnd.get("back"):
             return ret
-        fstr = "{}.serve_file".format(fnd["back"])
+        fstr = f"{fnd['back']}.serve_file"
         if fstr in self.servers:
             return self.servers[fstr](load, fnd)
         return ret
@@ -637,7 +635,7 @@ class Fileserver:
         if not fnd.get("back"):
             return "", None
         stat_result = fnd.get("stat", None)
-        fstr = "{}.file_hash".format(fnd["back"])
+        fstr = f"{fnd['back']}.file_hash"
         if fstr in self.servers:
             return self.servers[fstr](load, fnd), stat_result
         return "", None

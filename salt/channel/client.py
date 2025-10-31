@@ -549,14 +549,10 @@ class AsyncPubChannel:
                 # On reconnects, fire a master event to notify that the minion is
                 # available.
                 if self.opts.get("__role") == "syndic":
-                    data = "Syndic {} started at {}".format(
-                        self.opts["id"], time.asctime()
-                    )
+                    data = f"Syndic {self.opts['id']} started at {time.asctime()}"
                     tag = salt.utils.event.tagify([self.opts["id"], "start"], "syndic")
                 else:
-                    data = "Minion {} started at {}".format(
-                        self.opts["id"], time.asctime()
-                    )
+                    data = f"Minion {self.opts['id']} started at {time.asctime()}"
                     tag = salt.utils.event.tagify([self.opts["id"], "start"], "minion")
                 load = {
                     "id": self.opts["id"],

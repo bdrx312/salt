@@ -1440,7 +1440,7 @@ class Minions(LowDataAdapter):
         return {
             "return": job_data,
             "_links": {
-                "jobs": [{"href": "/jobs/{}".format(i["jid"])} for i in job_data if i],
+                "jobs": [{"href": f"/jobs/{i['jid']}"} for i in job_data if i],
             },
         }
 
@@ -1743,7 +1743,7 @@ class Keys(LowDataAdapter):
 
         headers = cherrypy.response.headers
         headers["Content-Disposition"] = (
-            'attachment; filename="saltkeys-{}.tar"'.format(lowstate[0]["id_"])
+            f'attachment; filename="saltkeys-{lowstate[0]["id_"]}.tar"'
         )
         headers["Content-Type"] = "application/x-tar"
         headers["Content-Length"] = len(fileobj.getvalue())
@@ -2386,7 +2386,7 @@ class Events:
                         break
 
                     data = next(stream)
-                    yield "tag: {}\n".format(data.get("tag", ""))
+                    yield f"tag: {data.get('tag', '')}\n"
                     yield f"data: {salt.utils.json.dumps(data)}\n\n"
 
         return listen()

@@ -140,9 +140,7 @@ class BaseCaller:
             mod_name = fun.split(".")[0]
             if mod_name in self.minion.function_errors:
                 sys.stderr.write(
-                    " Possible reasons: {}\n".format(
-                        self.minion.function_errors[mod_name]
-                    )
+                    f" Possible reasons: {self.minion.function_errors[mod_name]}\n"
                 )
             else:
                 sys.stderr.write("\n")
@@ -176,7 +174,7 @@ class BaseCaller:
                 sys.stderr.write(
                     "Cannot write to process directory. "
                     "Do you have permissions to "
-                    "write to {} ?\n".format(proc_fn)
+                    f"write to {proc_fn} ?\n"
                 )
             func = self.minion.functions[fun]
             data = {"arg": args, "fun": fun}
@@ -232,15 +230,15 @@ class BaseCaller:
 
             ret["retcode"] = retcode
         except CommandExecutionError as exc:
-            msg = "Error running '{0}': {1}\n"
+            msg = f"Error running '{fun}': {exc}\n"
             active_level = LOG_LEVELS.get(self.opts["log_level"].lower(), logging.ERROR)
             if active_level <= logging.DEBUG:
                 sys.stderr.write(traceback.format_exc())
-            sys.stderr.write(msg.format(fun, exc))
+            sys.stderr.write(msg)
             sys.exit(salt.defaults.exitcodes.EX_GENERIC)
         except CommandNotFoundError as exc:
-            msg = "Command required for '{0}' not found: {1}\n"
-            sys.stderr.write(msg.format(fun, exc))
+            msg = f"Command required for '{fun}' not found: {exc}\n"
+            sys.stderr.write(msg)
             sys.exit(salt.defaults.exitcodes.EX_GENERIC)
         try:
             os.remove(proc_fn)

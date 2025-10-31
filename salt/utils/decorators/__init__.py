@@ -216,11 +216,7 @@ class Depends:
                     mod_name,
                     func_name,
                     dependency,
-                    (
-                        " version {}".format(params["version"])
-                        if "version" in params
-                        else ""
-                    ),
+                    (f" version {params['version']}" if "version" in params else ""),
                 )
                 # if not, unload the function
                 if frame:

@@ -253,7 +253,7 @@ With Python:
     if secret:
         print(secret.replace('\n', r'\n'))
     else:
-        raise ValueError('No ciphertext found: {0}'.format(stderr))
+        raise ValueError(f'No ciphertext found: {stderr}')
 
 .. code-block:: bash
 
@@ -306,7 +306,7 @@ With Python:
     if secret:
         print(secret.replace('\n', r'\n'))
     else:
-        raise ValueError('No ciphertext found: {0}'.format(stderr))
+        raise ValueError(f'No ciphertext found: {stderr}')
 
 .. code-block:: bash
 
@@ -433,10 +433,7 @@ def _decrypt_ciphertext(cipher):
         log.warning("Could not decrypt cipher %r, received: %r", cipher, decrypt_error)
         if __opts__["gpg_decrypt_must_succeed"]:
             raise SaltRenderError(
-                "Could not decrypt cipher {!r}, received: {!r}".format(
-                    cipher,
-                    decrypt_error,
-                )
+                f"Could not decrypt cipher {cipher!r}, received: {decrypt_error!r}"
             )
         return cipher
     else:

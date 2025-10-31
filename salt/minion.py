@@ -168,16 +168,14 @@ def resolve_dns(opts, fallback=True):
                 master = unknown_str
             if opts.get("__role") == "syndic":
                 err = (
-                    "Master address: '{}' could not be resolved. Invalid or"
+                    f"Master address: '{master}' could not be resolved. Invalid or"
                     " unresolveable address. Set 'syndic_master' value in minion"
-                    " config.".format(master)
+                    " config."
                 )
             else:
                 err = (
-                    "Master address: '{}' could not be resolved. Invalid or"
-                    " unresolveable address. Set 'master' value in minion config.".format(
-                        master
-                    )
+                    f"Master address: '{master}' could not be resolved. Invalid or"
+                    " unresolveable address. Set 'master' value in minion config."
                 )
             log.error(err)
             raise SaltSystemExit(code=42, msg=err)
@@ -228,9 +226,7 @@ def resolve_dns(opts, fallback=True):
         log.debug(
             "Using %d as source port for the master pub", ret["source_publish_port"]
         )
-    ret["master_uri"] = "tcp://{ip}:{port}".format(
-        ip=ret["master_ip"], port=opts["master_port"]
-    )
+    ret["master_uri"] = f"tcp://{ret['master_ip']}:{opts['master_port']}"
     log.debug("Master URI: %s", ret["master_uri"])
 
     return ret
@@ -1136,7 +1132,7 @@ class MinionManager(MinionBase):
                 s_opts["auth_timeout"],
                 False,
                 io_loop=self.io_loop,
-                loaded_base_name="salt.loader.{}".format(s_opts["master"]),
+                loaded_base_name=f"salt.loader.{s_opts['master']}",
                 jid_queue=self.jid_queue,
             )
             self.io_loop.create_task(self._connect_minion(minion))
@@ -1175,10 +1171,8 @@ class MinionManager(MinionBase):
             except SaltMasterUnresolvableError:
                 minion.destroy()
                 err = (
-                    "Master address: '{}' could not be resolved. Invalid or"
-                    " unresolveable address. Set 'master' value in minion config.".format(
-                        minion.opts["master"]
-                    )
+                    f"Master address: '{minion.opts['master']}' could not be resolved. Invalid or"
+                    " unresolveable address. Set 'master' value in minion config."
                 )
                 log.error(err)
                 break
@@ -1885,7 +1879,7 @@ class Minion(MinionBase):
         instance = self
         creds_map = None
         multiprocessing_enabled = self.opts.get("multiprocessing", True)
-        name = "ProcessPayload(jid={})".format(data["jid"])
+        name = f"ProcessPayload(jid={data['jid']})"
         if multiprocessing_enabled:
             if salt.utils.platform.spawning_platform():
                 # let python reconstruct the minion on the other side if we're
@@ -1996,9 +1990,7 @@ class Minion(MinionBase):
             executors = [executors]
         elif not isinstance(executors, list) or not executors:
             raise SaltInvocationError(
-                "Wrong executors specification: {}. String or non-empty list expected".format(
-                    executors
-                )
+                f"Wrong executors specification: {executors}. String or non-empty list expected"
             )
         if opts.get("sudo_user", "") and executors[-1] != "sudo":
             executors[-1] = "sudo"  # replace the last one with sudo
@@ -2133,11 +2125,7 @@ class Minion(MinionBase):
                 # execution module call raises a TypeError. Make this it's own
                 # type of exception when we start validating state and
                 # execution argument module inputs.
-                msg = "Passed invalid arguments to {}: {}\n{}".format(
-                    function_name,
-                    exc,
-                    minion_instance.functions[function_name].__doc__ or "",
-                )
+                msg = f"Passed invalid arguments to {function_name}: {exc}\n{minion_instance.functions[function_name].__doc__ or ''}"
                 log.warning(msg, exc_info_on_loglevel=logging.DEBUG)
                 ret["return"] = msg
                 ret["out"] = "nested"
@@ -2164,9 +2152,9 @@ class Minion(MinionBase):
                 )
                 mod_name = function_name.split(".")[0]
                 if mod_name in minion_instance.function_errors:
-                    ret["return"] += " Possible reasons: '{}'".format(
-                        minion_instance.function_errors[mod_name]
-                    )
+                    ret[
+                        "return"
+                    ] += f" Possible reasons: '{minion_instance.function_errors[mod_name]}'"
             ret["success"] = False
             ret["retcode"] = salt.defaults.exitcodes.EX_GENERIC
             ret["out"] = "nested"
@@ -2581,13 +2569,13 @@ class Minion(MinionBase):
         if self.opts["enable_legacy_startup_events"]:
             # Old style event. Defaults to False in 3001 release.
             await self._fire_master_main(
-                "Minion {} started at {}".format(self.opts["id"], time.asctime()),
+                f"Minion {self.opts['id']} started at {time.asctime()}",
                 "minion_start",
                 include_startup_grains=include_grains,
             )
         # send name spaced event
         await self._fire_master_main(
-            "Minion {} started at {}".format(self.opts["id"], time.asctime()),
+            f"Minion {self.opts['id']} started at {time.asctime()}",
             tagify([self.opts["id"], "start"], "minion"),
             include_startup_grains=include_grains,
         )
@@ -2959,15 +2947,11 @@ class Minion(MinionBase):
                 # if the master failback event is not for the top master, raise an exception
                 if data["master"] != self.opts["master_list"][0]:
                     raise SaltException(
-                        "Bad master '{}' when mine failback is '{}'".format(
-                            data["master"], self.opts["master"]
-                        )
+                        f"Bad master '{data['master']}' when mine failback is '{self.opts['master']}'"
                     )
                 # if the master failback event is for the current master, raise an exception
                 elif data["master"] == self.opts["master"][0]:
-                    raise SaltException(
-                        "Already connected to '{}'".format(data["master"])
-                    )
+                    raise SaltException(f"Already connected to '{data['master']}'")
 
             if self.connected:
                 # we are not connected anymore
@@ -3383,9 +3367,7 @@ class Minion(MinionBase):
         # publication if the master does not determine that it should.
 
         if "tgt_type" in load:
-            match_func = self.matchers.get(
-                "{}_match.match".format(load["tgt_type"]), None
-            )
+            match_func = self.matchers.get(f"{load['tgt_type']}_match.match", None)
             if match_func is None:
                 return False
             if load["tgt_type"] in ("grain", "grain_pcre", "pillar"):
@@ -3520,11 +3502,11 @@ class Syndic(Minion):
         if self.opts["enable_legacy_startup_events"]:
             # Old style event. Defaults to false in 3001 release.
             self._fire_master(
-                "Syndic {} started at {}".format(self.opts["id"], time.asctime()),
+                f"Syndic {self.opts['id']} started at {time.asctime()}",
                 "syndic_start",
             )
         self._fire_master(
-            "Syndic {} started at {}".format(self.opts["id"], time.asctime()),
+            f"Syndic {self.opts['id']} started at {time.asctime()}",
             tagify([self.opts["id"], "start"], "syndic"),
         )
 
@@ -3926,7 +3908,7 @@ class SyndicManager(MinionBase):
                 jdict["__fun__"] = data.get("fun")
                 jdict["__jid__"] = data["jid"]
                 jdict["__load__"] = {}
-                fstr = "{}.get_load".format(self.opts["master_job_cache"])
+                fstr = f"{self.opts['master_job_cache']}.get_load"
                 # Only need to forward each load once. Don't hit the disk
                 # for every minion return!
                 if data["jid"] not in self.jid_forward_cache:
@@ -4024,7 +4006,7 @@ class ProxyMinionManager(MinionManager):
 
 
 def _metaproxy_call(opts, fn_name):
-    loaded_base_name = "{}.{}".format(opts["id"], salt.loader.lazy.LOADED_BASE_NAME)
+    loaded_base_name = f"{opts['id']}.{salt.loader.lazy.LOADED_BASE_NAME}"
     metaproxy = salt.loader.metaproxy(opts, loaded_base_name=loaded_base_name)
     try:
         metaproxy_name = opts["metaproxy"]
@@ -4145,10 +4127,8 @@ class SProxyMinion(SMinion):
         if "proxy" not in self.opts["pillar"] and "proxy" not in self.opts:
             errmsg = (
                 'No "proxy" configuration key found in pillar or opts '
-                "dictionaries for id {id}. Check your pillar/options "
-                "configuration and contents. Salt-proxy aborted.".format(
-                    id=self.opts["id"]
-                )
+                f"dictionaries for id {self.opts['id']}. Check your pillar/options "
+                "configuration and contents. Salt-proxy aborted."
             )
             log.error(errmsg)
             self._running = False
@@ -4201,10 +4181,8 @@ class SProxyMinion(SMinion):
             or f"{fq_proxyname}.shutdown" not in self.proxy
         ):
             errmsg = (
-                "Proxymodule {} is missing an init() or a shutdown() or both. ".format(
-                    fq_proxyname
-                )
-                + "Check your proxymodule.  Salt-proxy aborted."
+                f"Proxymodule {fq_proxyname} is missing an init() or a shutdown() or both."
+                " Check your proxymodule.  Salt-proxy aborted."
             )
             log.error(errmsg)
             self._running = False

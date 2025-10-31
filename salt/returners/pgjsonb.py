@@ -517,9 +517,7 @@ def _archive_jobs(timestamp):
         for table_name in source_tables:
             try:
                 tmp_table_name = table_name + "_archive"
-                sql = "create table IF NOT exists {} (LIKE {})".format(
-                    tmp_table_name, table_name
-                )
+                sql = f"create table IF NOT exists {tmp_table_name} (LIKE {table_name})"
                 cursor.execute(sql)
                 cursor.execute("COMMIT")
                 target_tables[table_name] = tmp_table_name
@@ -531,10 +529,8 @@ def _archive_jobs(timestamp):
 
         try:
             sql = (
-                "insert into {} select * from {} where jid in (select distinct jid from"
-                " salt_returns where alter_time < %s)".format(
-                    target_tables["jids"], "jids"
-                )
+                f"insert into {target_tables['jids']} select * from jids where jid in (select distinct jid from"
+                " salt_returns where alter_time < %s)"
             )
             cursor.execute(sql, (timestamp,))
             cursor.execute("COMMIT")
@@ -548,9 +544,7 @@ def _archive_jobs(timestamp):
             raise
 
         try:
-            sql = "insert into {} select * from {} where alter_time < %s".format(
-                target_tables["salt_returns"], "salt_returns"
-            )
+            sql = f"insert into {target_tables['salt_returns']} select * from salt_returns where alter_time < %s"
             cursor.execute(sql, (timestamp,))
             cursor.execute("COMMIT")
         except psycopg2.DatabaseError as err:
@@ -560,9 +554,7 @@ def _archive_jobs(timestamp):
             raise err
 
         try:
-            sql = "insert into {} select * from {} where alter_time < %s".format(
-                target_tables["salt_events"], "salt_events"
-            )
+            sql = "insert into {target_tables['salt_events']} select * from salt_events where alter_time < %s"
             cursor.execute(sql, (timestamp,))
             cursor.execute("COMMIT")
         except psycopg2.DatabaseError as err:
@@ -584,9 +576,7 @@ def clean_old_jobs():
     if keep_jobs_seconds > 0:
         try:
             with _get_serv() as cur:
-                sql = "select (NOW() -  interval '{}' second) as stamp;".format(
-                    keep_jobs_seconds
-                )
+                sql = f"select (NOW() -  interval '{keep_jobs_seconds}' second) as stamp;"
                 cur.execute(sql)
                 rows = cur.fetchall()
                 stamp = rows[0][0]

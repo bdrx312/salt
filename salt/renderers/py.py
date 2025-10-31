@@ -94,7 +94,7 @@ Full Example
         if __grains__['os'] == 'Ubuntu':
             user = 'ubuntu'
             group = 'ubuntu'
-            home = '/home/{0}'.format(user)
+            home = f'/home/{user}'
         else:
             user = 'root'
             group = 'root'

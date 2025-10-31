@@ -271,7 +271,7 @@ def file_hash(load, fnd):
         "roots",
         "hash",
         saltenv,
-        "{}.hash.{}".format(fnd["rel"], __opts__["hash_type"]),
+        f"{fnd['rel']}.hash.{__opts__['hash_type']}",
     )
     # if we have a cache, serve that if the mtime hasn't changed
     if os.path.exists(cache_path):
@@ -317,7 +317,7 @@ def file_hash(load, fnd):
             else:
                 raise
     # save the cache object "hash:mtime"
-    cache_object = "{}:{}".format(ret["hsum"], os.path.getmtime(path))
+    cache_object = f"{ret['hsum']}:{os.path.getmtime(path)}"
     with salt.utils.files.flopen(cache_path, "w") as fp_:
         fp_.write(cache_object)
     return ret

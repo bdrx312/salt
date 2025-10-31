@@ -209,15 +209,8 @@ class Shell:
         if self.passwd:
             # Using single quotes prevents shell expansion and
             # passwords containing '$'
-            return "{} {} '{} -p {} {} {}@{}'".format(
-                "ssh-copy-id",
-                f"-i {self.priv}.pub",
-                self._passwd_opts(),
-                self.port,
-                self._ssh_opts(),
-                self.user,
-                self.host,
-            )
+            return (f"ssh-copy-id -i '{self.priv}.pub'"
+                f" '{self._passwd_opts()} -p {self.port} {self._ssh_opts()} {self.user}@{self.host}'")
         return None
 
     def _copy_id_str_new(self):
@@ -228,15 +221,8 @@ class Shell:
         if self.passwd:
             # Using single quotes prevents shell expansion and
             # passwords containing '$'
-            return "{} {} {} -p {} {} {}@{}".format(
-                "ssh-copy-id",
-                f"-i {self.priv}.pub",
-                self._passwd_opts(),
-                self.port,
-                self._ssh_opts(),
-                self.user,
-                self.host,
-            )
+            return (f"ssh-copy-id -i '{self.priv}.pub' "
+                f"{self._passwd_opts()} -p '{self.port}' {self._ssh_opts()} '{self.user}@{self.host}'")
         return None
 
     def copy_id(self):

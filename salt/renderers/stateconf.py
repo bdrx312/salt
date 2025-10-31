@@ -71,8 +71,8 @@ def __init__(opts):
 
 MOD_BASENAME = os.path.basename(__file__)
 INVALID_USAGE_ERROR = SaltRenderError(
-    "Invalid use of {0} renderer!\n"
-    """Usage: #!{0} [-GoSp] [<data_renderer> [options] . <template_renderer> [options]]
+    f"Invalid use of {MOD_BASENAME} renderer!\n"
+    f"""Usage: #!{MOD_BASENAME} [-GoSp] [<data_renderer> [options] . <template_renderer> [options]]
 
 where an example <data_renderer> would be yaml and a <template_renderer> might
 be jinja. Each renderer can be passed its renderer specific options.
@@ -92,9 +92,7 @@ Options(for this renderer):
        in the sls will have no effect, but other features of the renderer still
        apply.
 
-  """.format(
-        MOD_BASENAME
-    )
+  """
 )
 
 
@@ -134,10 +132,10 @@ def render(input, saltenv="base", sls="", argline="", **kws):
                 sid = has_names_decls(data)
                 if sid:
                     raise SaltRenderError(
-                        "'names' declaration(found in state id: {}) is "
+                        f"'names' declaration(found in state id: {sid}) is "
                         "not supported with implicitly ordered states! You "
                         "should generate the states in a template for-loop "
-                        "instead.".format(sid)
+                        "instead."
                     )
                 add_implicit_requires(data)
 
@@ -399,8 +397,8 @@ def rename_state_ids(data, sls, is_extend=False):
             newsid = _local_to_abs_sid(sid, sls)
             if newsid in data:
                 raise SaltRenderError(
-                    "Can't rename state id({}) into {} because the later "
-                    "already exists!".format(sid, newsid)
+                    f"Can't rename state id({sid}) into {newsid} because the later "
+                    "already exists!"
                 )
             # add a '- name: sid' to those states without '- name'.
             for sname, args in data[sid].items():
@@ -460,8 +458,8 @@ def add_implicit_requires(data):
         for _, rstate, rsid in reqs:
             if T(rsid, rstate) in states_after:
                 raise SaltRenderError(
-                    "State({}) can't require/watch/listen/onchanges/onfail a state({})"
-                    " defined after it!".format(tag, T(rsid, rstate))
+                    f"State({tag}) can't require/watch/listen/onchanges/onfail a state({T(rsid, rstate)})"
+                    " defined after it!"
                 )
 
         reqs = nvlist2(args, REQUIRE_IN)
@@ -470,9 +468,9 @@ def add_implicit_requires(data):
         for _, rstate, rsid in reqs:
             if T(rsid, rstate) in states_before:
                 raise SaltRenderError(
-                    "State({}) can't"
-                    " require_in/watch_in/listen_in/onchanges_in/onfail_in a state({})"
-                    " defined before it!".format(tag, T(rsid, rstate))
+                    f"State({tag}) can't"
+                    f" require_in/watch_in/listen_in/onchanges_in/onfail_in a state({T(rsid, rstate)})"
+                    " defined before it!"
                 )
 
         # add a (- state: sid) item, at the beginning of the require of this
@@ -491,9 +489,7 @@ def add_start_state(data, sls):
     start_sid = __opts__["stateconf_start_state"]
     if start_sid in data:
         raise SaltRenderError(
-            "Can't generate start state({})! The same state id already exists!".format(
-                start_sid
-            )
+            f"Can't generate start state({start_sid})! The same state id already exists!"
         )
     if not data:
         return
@@ -517,9 +513,7 @@ def add_goal_state(data):
     goal_sid = __opts__["stateconf_goal_state"]
     if goal_sid in data:
         raise SaltRenderError(
-            "Can't generate goal state({})! The same state id already exists!".format(
-                goal_sid
-            )
+            f"Can't generate goal state({goal_sid})! The same state id already exists!"
         )
     else:
         reqlist = []

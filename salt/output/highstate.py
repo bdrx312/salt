@@ -231,7 +231,7 @@ def _compress_ids(data):
                         ],
                     )
                 )
-                comps[1] = "{} ({})".format(info["__id__"], id_count[_id])
+                comps[1] = f"{info['__id__']} ({id_count[_id]})"
                 tname = "_|-".join(comps)
 
                 # store the first entry as-is
@@ -354,23 +354,23 @@ def _format_host(host, data, indent_level=1):
 
     if isinstance(data, int):
         nchanges = 1
-        hstrs.append("{0}    {1}{2[ENDC]}".format(hcolor, data, colors))
+        hstrs.append(f"{hcolor}    {data}{colors['ENDC']}")
         hcolor = colors["CYAN"]  # Print the minion name in cyan
     elif isinstance(data, str):
         # Data in this format is from saltmod.function,
         # so it is always a 'change'
         nchanges = 1
         for data in data.splitlines():
-            hstrs.append("{0}    {1}{2[ENDC]}".format(hcolor, data, colors))
+            hstrs.append(f"{hcolor}    {data}{colors['ENDC']}")
         hcolor = colors["CYAN"]  # Print the minion name in cyan
     elif isinstance(data, list):
         # Errors have been detected, list them in RED!
         hcolor = colors["LIGHT_RED"]
-        hstrs.append("    {0}Data failed to compile:{1[ENDC]}".format(hcolor, colors))
+        hstrs.append(f"    {hcolor}Data failed to compile:{colors['ENDC']}")
         for err in data:
             if strip_colors:
                 err = salt.output.strip_esc_sequence(salt.utils.data.decode(err))
-            hstrs.append("{0}----------\n    {1}{2[ENDC]}".format(hcolor, err, colors))
+            hstrs.append(f"{hcolor}----------\n    {err}{colors['ENDC']}")
     elif isinstance(data, dict):
         # Verify that the needed data is present
         data_tmp = {}
@@ -576,11 +576,11 @@ def _format_host(host, data, indent_level=1):
                     for key, value in ret["data"].items():
                         comment = f"{comment}\n\t\t{key}: {value}"
                 else:
-                    comment = "{} {}".format(comment, ret["data"])
+                    comment = f"{comment} {ret['data']}"
             for detail in ["start_time", "duration"]:
                 ret.setdefault(detail, "")
             if ret["duration"] != "":
-                ret["duration"] = "{} ms".format(ret["duration"])
+                ret["duration"] = f"{ret['duration']} ms"
             svars = {
                 "tcolor": tcolor,
                 "comps": comps,
@@ -591,7 +591,7 @@ def _format_host(host, data, indent_level=1):
             }
             hstrs.extend([sline.format(**svars) for sline in state_lines])
             changes = "     Changes:   " + ctext
-            hstrs.append("{0}{1}{2[ENDC]}".format(tcolor, changes, colors))
+            hstrs.append(f"{tcolor}{changes}{colors['ENDC']}")
 
             if "warnings" in ret:
                 rcounts.setdefault("warnings", 0)
@@ -619,13 +619,13 @@ def _format_host(host, data, indent_level=1):
         hstrs.append(
             colorfmt.format(
                 colors["CYAN"],
-                "\nSummary for {}\n{}".format(host, "-" * line_max_len),
+                f"\nSummary for {host}\n{'-' * line_max_len}",
                 colors,
             )
         )
 
         def _counts(label, count):
-            return "{0}: {1:>{2}}".format(label, count, line_max_len - (len(label) + 2))
+            return f"{label}: {count:>{line_max_len - (len(label) + 2)}}"
 
         # Successful states
         changestats = []
@@ -643,7 +643,7 @@ def _format_host(host, data, indent_level=1):
                 colorfmt.format(colors["GREEN"], f"changed={nchanges}", colors)
             )
         if changestats:
-            changestats = " ({})".format(", ".join(changestats))
+            changestats = f" ({', '.join(changestats)})"
         else:
             changestats = ""
         hstrs.append(
@@ -738,7 +738,7 @@ def _format_host(host, data, indent_level=1):
 
     if strip_colors:
         host = salt.output.strip_esc_sequence(host)
-    hstrs.insert(0, "{0}{1}:{2[ENDC]}".format(hcolor, host, colors))
+    hstrs.insert(0, f"{hcolor}{host}:{colors['ENDC']}")
     return "\n".join(hstrs), nchanges > 0
 
 

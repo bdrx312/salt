@@ -153,14 +153,12 @@ class NetapiClient:
 
         if low.get("client") not in CLIENTS:
             raise salt.exceptions.SaltInvocationError(
-                "Invalid client specified: '{}'".format(low.get("client"))
+                f"Invalid client specified: '{low.get('client')}'"
             )
 
         if low.get("client") not in self.opts.get("netapi_enable_clients"):
             raise salt.exceptions.SaltInvocationError(
-                "Client disabled: '{}'. Add to 'netapi_enable_clients' master config option to enable.".format(
-                    low.get("client")
-                )
+                f"Client disabled: '{low.get('client')}'. Add to 'netapi_enable_clients' master config option to enable."
             )
 
         if not ("token" in low or "eauth" in low):

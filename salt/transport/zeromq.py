@@ -57,43 +57,23 @@ def _get_master_uri(master_ip, master_port, source_ip=None, source_port=None):
     """
     from salt.utils.network import ip_bracket
 
-    master_uri = "tcp://{master_ip}:{master_port}".format(
-        master_ip=ip_bracket(master_ip), master_port=master_port
-    )
+    master_uri = f"tcp://{ip_bracket(master_ip)}:{master_port}"
 
     if source_ip or source_port:
         if LIBZMQ_VERSION_INFO >= (4, 1, 6) and ZMQ_VERSION_INFO >= (16, 0, 1):
             # The source:port syntax for ZeroMQ has been added in libzmq 4.1.6
             # which is included in the pyzmq wheels starting with 16.0.1.
             if source_ip and source_port:
-                master_uri = (
-                    "tcp://{source_ip}:{source_port};{master_ip}:{master_port}".format(
-                        source_ip=ip_bracket(source_ip),
-                        source_port=source_port,
-                        master_ip=ip_bracket(master_ip),
-                        master_port=master_port,
-                    )
-                )
+                master_uri = f"tcp://{ip_bracket(source_ip)}:{source_port};{ip_bracket(master_ip)}:{master_port}"
             elif source_ip and not source_port:
-                master_uri = "tcp://{source_ip}:0;{master_ip}:{master_port}".format(
-                    source_ip=ip_bracket(source_ip),
-                    master_ip=ip_bracket(master_ip),
-                    master_port=master_port,
-                )
+                master_uri = f"tcp://{ip_bracket(source_ip)}:0;{ip_bracket(master_ip)}:{master_port}"
             elif source_port and not source_ip:
                 ip_any = (
                     "0.0.0.0"
                     if ipaddress.ip_address(master_ip).version == 4
                     else ip_bracket("::")
                 )
-                master_uri = (
-                    "tcp://{ip_any}:{source_port};{master_ip}:{master_port}".format(
-                        ip_any=ip_any,
-                        source_port=source_port,
-                        master_ip=ip_bracket(master_ip),
-                        master_port=master_port,
-                    )
-                )
+                master_uri = f"tcp://{ip_any}:{source_port};{ip_bracket(master_ip)}:{master_port}"
         else:
             log.warning(
                 "Unable to connect to the Master using a specific source IP / port"
@@ -318,9 +298,7 @@ class PublishClient(salt.transport.base.PublishClient):
                 payload = salt.payload.loads(messages[1])
             else:
                 raise Exception(
-                    "Invalid number of messages ({}) in zeromq pubmessage from master".format(
-                        len(messages_len)
-                    )
+                    f"Invalid number of messages ({messages_len}) in zeromq pubmessage from master"
                 )
         else:
             payload = salt.payload.loads(messages)
@@ -442,13 +420,9 @@ class RequestServer(salt.transport.base.DaemonizedRequestServer):
             os.nice(self.opts["mworker_queue_niceness"])
 
         if self.opts.get("ipc_mode", "") == "tcp":
-            self.w_uri = "tcp://127.0.0.1:{}".format(
-                self.opts.get("tcp_master_workers", 4515)
-            )
+            self.w_uri = f"tcp://127.0.0.1:{self.opts.get('tcp_master_workers', 4515)}"
         else:
-            self.w_uri = "ipc://{}".format(
-                os.path.join(self.opts["sock_dir"], "workers.ipc")
-            )
+            self.w_uri = f"ipc://{os.path.join(self.opts['sock_dir'], 'workers.ipc')}"
 
         log.info("Setting up the master communication server")
         log.info("ReqServer clients %s", self.uri)
@@ -541,13 +515,9 @@ class RequestServer(salt.transport.base.DaemonizedRequestServer):
         self._start_zmq_monitor()
 
         if self.opts.get("ipc_mode", "") == "tcp":
-            self.w_uri = "tcp://127.0.0.1:{}".format(
-                self.opts.get("tcp_master_workers", 4515)
-            )
+            self.w_uri = f"tcp://127.0.0.1:{self.opts.get('tcp_master_workers', 4515)}"
         else:
-            self.w_uri = "ipc://{}".format(
-                os.path.join(self.opts["sock_dir"], "workers.ipc")
-            )
+            self.w_uri = f"ipc://{os.path.join(self.opts['sock_dir'], 'workers.ipc')}"
         log.info("Worker binding to socket %s", self.w_uri)
         self._socket.connect(self.w_uri)
         if self.opts.get("ipc_mode", "") != "tcp" and os.path.isfile(

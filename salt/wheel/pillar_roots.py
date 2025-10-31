@@ -95,13 +95,9 @@ def write(data, path, saltenv="base", index=0):
     if saltenv not in __opts__["pillar_roots"]:
         return f"Named environment {saltenv} is not present"
     if len(__opts__["pillar_roots"][saltenv]) <= index:
-        return "Specified index {} in environment {} is not present".format(
-            index, saltenv
-        )
+        return f"Specified index {index} in environment {saltenv} is not present"
     if os.path.isabs(path):
-        return "The path passed in {} is not relative to the environment {}".format(
-            path, saltenv
-        )
+        return f"The path passed in {path} is not relative to the environment {saltenv}"
     roots_dir = __opts__["pillar_roots"][saltenv][index]
     dest = os.path.join(roots_dir, path)
     if not salt.utils.verify.clean_path(roots_dir, dest, subdir=True):

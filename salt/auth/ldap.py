@@ -140,9 +140,7 @@ class _LDAPConnection:
                 self.ldap.simple_bind_s(self.binddn, self.bindpw)
         except Exception as ldap_error:  # pylint: disable=broad-except
             raise CommandExecutionError(
-                "Failed to bind to LDAP server {} as {}: {}".format(
-                    self.uri, self.binddn, ldap_error
-                )
+                f"Failed to bind to LDAP server {self.uri} as {self.binddn}: {ldap_error}"
             )
 
 
@@ -421,8 +419,8 @@ def groups(username, **kwargs):
                 return group_list
             # LDAP results are always tuples.  First entry in the tuple is the DN
             dn = ldap.filter.escape_filter_chars(user_dn_results[0][0])
-            ldap_search_string = "(&(member={})(objectClass={}))".format(
-                dn, _config("groupclass")
+            ldap_search_string = (
+                f"(&(member={dn})(objectClass={_config('groupclass')}))"
             )
             log.debug("Running LDAP group membership search: %s", ldap_search_string)
             try:
@@ -480,9 +478,9 @@ def groups(username, **kwargs):
                 return []
         else:
             if _config("groupou"):
-                search_base = "ou={},{}".format(_config("groupou"), _config("basedn"))
+                search_base = f"ou={_config('groupou')},{_config('basedn')}"
             else:
-                search_base = "{}".format(_config("basedn"))
+                search_base = f"{_config('basedn')}"
             search_string = "(&({}={})(objectClass={}))".format(
                 _config("accountattributename"), username, _config("groupclass")
             )

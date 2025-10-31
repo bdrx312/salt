@@ -76,7 +76,7 @@ def _generate_module(name):
     if name in sys.modules:
         return
 
-    code = "'''Salt loaded {} parent module'''".format(name.split(".")[-1])
+    code = f"'''Salt loaded {name.split('.')[-1]} parent module'''"
     # ModuleType can't accept a unicode type on PY2
     module = types.ModuleType(str(name))
     exec(code, module.__dict__)
@@ -232,9 +232,7 @@ class LoadedMod:
             )
 
     def __repr__(self):
-        return "<{} module='{}.{}'>".format(
-            self.__class__.__name__, self.loader.loaded_base_name, self.mod
-        )
+        return f"<{self.__class__.__name__} module='{self.loader.loaded_base_name}.{self.mod}'>"
 
 
 class LazyLoader(salt.utils.lazy.LazyDict):
@@ -344,7 +342,7 @@ class LazyLoader(salt.utils.lazy.LazyDict):
 
         self.disabled = set(
             self.opts.get(
-                "disable_{}{}".format(self.tag, "" if self.tag[-1] == "s" else "s"),
+                f"disable_{self.tag}{'' if self.tag[-1] == 's' else 's'}",
                 [],
             )
         )
@@ -419,8 +417,8 @@ class LazyLoader(salt.utils.lazy.LazyDict):
             raise AttributeError(mod_name)
 
     def __repr__(self):
-        return "<{} module='{}.{}'>".format(
-            self.__class__.__name__, self.loaded_base_name, self.tag
+        return (
+            f"<{self.__class__.__name__} module='{self.loaded_base_name}.{self.tag}'>"
         )
 
     def missing_fun_string(self, function_name):
@@ -439,9 +437,7 @@ class LazyLoader(salt.utils.lazy.LazyDict):
                 return f"'{function_name}' is not available."
             else:
                 if reason is not None:
-                    return "'{}' __virtual__ returned False: {}".format(
-                        mod_name, reason
-                    )
+                    return f"'{mod_name}' __virtual__ returned False: {reason}"
                 else:
                     return f"'{mod_name}' __virtual__ returned False"
 
@@ -763,12 +759,7 @@ class LazyLoader(salt.utils.lazy.LazyDict):
                         )
                     )
                 except TypeError:
-                    mod_namespace = "{}.{}.{}.{}".format(
-                        self.loaded_base_name,
-                        self.mod_type_check(fpath),
-                        self.tag,
-                        name,
-                    )
+                    mod_namespace = f"{self.loaded_base_name}.{self.mod_type_check(fpath)}.{self.tag}.{name}"
                 if suffix == "":
                     # pylint: disable=no-member
                     # Package directory, look for __init__
@@ -829,10 +820,8 @@ class LazyLoader(salt.utils.lazy.LazyDict):
         except ImportError as exc:
             if "magic number" in str(exc):
                 error_msg = (
-                    "Failed to import {} {}. Bad magic number. If migrating from"
-                    " Python2 to Python3, remove all .pyc files and try again.".format(
-                        self.tag, name
-                    )
+                    f"Failed to import {self.tag} {name}. Bad magic number. If migrating from"
+                    " Python2 to Python3, remove all .pyc files and try again."
                 )
                 log.warning(error_msg)
                 self.missing_modules[name] = error_msg
@@ -1199,16 +1188,12 @@ class LazyLoader(salt.utils.lazy.LazyDict):
                         virtual = virtual[0]
                     if self.opts.get("virtual_timer", False):
                         end = time.time() - start
-                        msg = "Virtual function took {} seconds for {}".format(
-                            end, module_name
-                        )
+                        msg = f"Virtual function took {end} seconds for {module_name}"
                         log.warning(msg)
                 except Exception as exc:  # pylint: disable=broad-except
                     error_reason = (
                         "Exception raised when processing __virtual__ function"
-                        " for {}. Module will not be loaded: {}".format(
-                            mod.__name__, exc
-                        )
+                        f" for {mod.__name__}. Module will not be loaded: {exc}"
                     )
                     log.error(error_reason, exc_info_on_loglevel=logging.DEBUG)
                     virtual = None

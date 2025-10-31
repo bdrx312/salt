@@ -170,7 +170,7 @@ def _generate_html_table(data, out, level=0, extra_style=""):
     Generate a single table of data
     """
     print(
-        '<table style="{}">'.format(_lookup_style("table", ["table" + str(level)])),
+        f'<table style="{_lookup_style("table", ["table" + str(level)])}">',
         file=out,
     )
 

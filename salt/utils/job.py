@@ -34,7 +34,7 @@ def store_job(opts, load, event=None, mminion=None):
         load["tgt_type"] = "glob"
         load["tgt"] = load["id"]
 
-        prep_fstr = "{}.prep_jid".format(opts["master_job_cache"])
+        prep_fstr = f"{opts['master_job_cache']}.prep_jid"
         try:
             load["jid"] = mminion.returners[prep_fstr](
                 nocache=load.get("nocache", False)

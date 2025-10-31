@@ -171,9 +171,7 @@ def dumps(msg, use_bin_type=False):
             # in the below if/elif chain. Also update
             # tests/unit/test_payload.py
             if objid in context and isinstance(obj, (dict, list, tuple)):
-                return "<Recursion on {} with id={}>".format(
-                    type(obj).__name__, id(obj)
-                )
+                return f"<Recursion on {type(obj).__name__} with id={id(obj)}>"
             context.add(objid)
 
             # The isinstance checks in this if/elif chain need to be
@@ -316,9 +314,7 @@ class SREQ:
             if tried >= tries:
                 self.clear_socket()
                 raise SaltReqTimeoutError(
-                    "SaltReqTimeoutError: after {} seconds, ran {} tries".format(
-                        timeout * tried, tried
-                    )
+                    f"SaltReqTimeoutError: after {timeout * tried} seconds, ran {tried} tries"
                 )
         return loads(self.socket.recv())
 

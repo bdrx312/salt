@@ -65,7 +65,7 @@ def update_config(file_name, yaml_contents):
             'eauth': 'pam',
         }
     """
-    file_name = "{}{}".format(file_name, ".conf")
+    file_name = f"{file_name}.conf"
     dir_path = os.path.join(
         __opts__["config_dir"], os.path.dirname(__opts__["default_include"])
     )

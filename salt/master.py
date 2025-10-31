@@ -711,7 +711,7 @@ class Master(SMaster):
             if not fileserver.servers:
                 errors.append(
                     "Failed to load fileserver backends, the configured backends "
-                    "are: {}".format(", ".join(self.opts["fileserver_backend"]))
+                    f"are: {', '.join(self.opts['fileserver_backend'])}"
                 )
             else:
                 # Run init() for all backends which support the function, to
@@ -1766,7 +1766,7 @@ class AESFuncs(TransportMethods):
         self.fs_.update_opts()
         if self.opts.get("minion_data_cache", False):
             self.masterapi.cache.store(
-                "minions/{}".format(load["id"]),
+                f"minions/{load['id']}",
                 "data",
                 {"grains": load["grains"], "pillar": data},
             )
@@ -1888,7 +1888,7 @@ class AESFuncs(TransportMethods):
                 continue
             # if we have a load, save it
             if load.get("load") and self.opts["master_job_cache"]:
-                fstr = "{}.save_load".format(self.opts["master_job_cache"])
+                fstr = f"{self.opts['master_job_cache']}.save_load"
                 self.mminion.returners[fstr](load["jid"], load["load"])
 
             # Register the syndic
@@ -2179,8 +2179,8 @@ class ClearFuncs(TransportMethods):
                     "error": {
                         "name": err_name,
                         "message": (
-                            'Authentication failure of type "{}" occurred for '
-                            "user {}.".format(auth_type, username)
+                            f'Authentication failure of type "{auth_type}" occurred for '
+                            f"user {username}."
                         ),
                     }
                 }
@@ -2244,8 +2244,8 @@ class ClearFuncs(TransportMethods):
                     "error": {
                         "name": err_name,
                         "message": (
-                            'Authentication failure of type "{}" occurred for '
-                            "user {}.".format(auth_type, username)
+                            f'Authentication failure of type "{auth_type}" occurred for '
+                            f"user {username}."
                         ),
                     }
                 }
@@ -2284,10 +2284,8 @@ class ClearFuncs(TransportMethods):
             return {"tag": tag, "data": data}
         except Exception as exc:  # pylint: disable=broad-except
             log.error("Exception occurred while introspecting %s: %s", fun, exc)
-            data["return"] = "Exception occurred in wheel {}: {}: {}".format(
-                fun,
-                exc.__class__.__name__,
-                exc,
+            data["return"] = (
+                f"Exception occurred in wheel {fun}: {exc.__class__.__name__}: {exc}"
             )
             data["success"] = False
             self.event.fire_event(data, tagify([jid, "ret"], "wheel"))
@@ -2450,9 +2448,7 @@ class ClearFuncs(TransportMethods):
                         "jid": None,
                         "minions": minions,
                         "error": (
-                            "Master could not resolve minions for target {}".format(
-                                clear_load["tgt"]
-                            )
+                            f"Master could not resolve minions for target {clear_load['tgt']}"
                         ),
                     },
                 }
@@ -2510,15 +2506,15 @@ class ClearFuncs(TransportMethods):
         nocache = extra.get("nocache", False)
 
         # Retrieve the jid
-        fstr = "{}.prep_jid".format(self.opts["master_job_cache"])
+        fstr = f"{self.opts['master_job_cache']}.prep_jid"
         try:
             # Retrieve the jid
             jid = self.mminion.returners[fstr](nocache=nocache, passed_jid=passed_jid)
         except (KeyError, TypeError):
             # The returner is not present
             msg = (
-                "Failed to allocate a jid. The requested returner '{}' "
-                "could not be loaded.".format(fstr.split(".")[0])
+                f"Failed to allocate a jid. The requested returner '{fstr.split('.')[0]}' "
+                "could not be loaded."
             )
             log.error(msg)
             return {"error": msg}
@@ -2577,13 +2573,13 @@ class ClearFuncs(TransportMethods):
         self.event.fire_event(new_job_load, tagify([clear_load["jid"], "new"], "job"))
 
         if self.opts["ext_job_cache"]:
-            fstr = "{}.save_load".format(self.opts["ext_job_cache"])
+            cache_key = f"{self.opts['ext_job_cache']}.save_load"
             save_load_func = True
 
             # Get the returner's save_load arg_spec.
             try:
                 arg_spec = salt.utils.args.get_function_argspec(
-                    self.mminion.returners[fstr]
+                    self.mminion.returners[cache_key]
                 )
 
                 # Check if 'minions' is included in returner's save_load arg_spec.
@@ -2605,7 +2601,7 @@ class ClearFuncs(TransportMethods):
 
             if save_load_func:
                 try:
-                    self.mminion.returners[fstr](
+                    self.mminion.returners[cache_key](
                         clear_load["jid"], clear_load, minions=minions
                     )
                 except Exception:  # pylint: disable=broad-except
@@ -2615,8 +2611,8 @@ class ClearFuncs(TransportMethods):
 
         # always write out to the master job caches
         try:
-            fstr = "{}.save_load".format(self.opts["master_job_cache"])
-            self.mminion.returners[fstr](clear_load["jid"], clear_load, minions)
+            cache_key = f"{self.opts['master_job_cache']}.save_load"
+            self.mminion.returners[cache_key](clear_load["jid"], clear_load, minions)
         except KeyError:
             log.critical(
                 "The specified returner used for the master job cache "
