@@ -613,7 +613,7 @@ class Fileserver:
         fnd = self.find_file(load["path"], load["saltenv"])
         if not fnd.get("back"):
             return ret
-        fstr = "{}.serve_file".format(fnd["back"])
+        fstr = f"{fnd['back']}.serve_file"
         if fstr in self.servers:
             return self.servers[fstr](load, fnd)
         return ret

@@ -238,7 +238,7 @@ class KeyCLI:
         if len(statuses) == 1:
             stat_str = statuses[0]
         else:
-            stat_str = "{} or {}".format(", ".join(statuses[:-1]), statuses[-1])
+            stat_str = f"{', '.join(statuses[:-1])} or {statuses[-1]}"
         msg = f"The key glob '{match}' does not match any {stat_str} keys."
         print(msg)
 
@@ -261,9 +261,7 @@ class KeyCLI:
                 if not ret:
                     self._print_no_match(cmd, self.opts["match"])
                     return
-                print(
-                    "The following keys are going to be {}ed:".format(cmd.rstrip("e"))
-                )
+                print(f"The following keys are going to be {cmd.rstrip('e')}ed:")
                 salt.output.display_output(ret, "key", opts=self.opts)
 
                 if not self.opts.get("yes", False):
@@ -290,11 +288,7 @@ class KeyCLI:
                         ret = list_ret
                     for minions in ret.values():
                         for minion in minions:
-                            print(
-                                "Key for minion {} {}ed.".format(
-                                    minion, cmd.rstrip("e")
-                                )
-                            )
+                            print(f"Key for minion {minion} {cmd.rstrip('e')}ed.")
                 elif isinstance(ret, dict):
                     salt.output.display_output(ret, "key", opts=self.opts)
                 else:
@@ -785,9 +779,9 @@ class Key:
                                 except salt.exceptions.SaltClientError:
                                     print(
                                         "Cannot contact Salt master. "
-                                        "Connection for {} will remain up until "
+                                        f"Connection for {key} will remain up until "
                                         "master AES key is rotated or auth is revoked "
-                                        "with 'saltutil.revoke_auth'.".format(key)
+                                        "with 'saltutil.revoke_auth'."
                                     )
                         if status == "minions_denied":
                             self.cache.flush("denied_keys", key)

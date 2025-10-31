@@ -42,7 +42,7 @@ def progress_iter(progress):
         progressbar.Timer(),
         " Returns: [",
         progressbar.Counter(),
-        "/{}]".format(progress["minion_count"]),
+        f"/{progress['minion_count']}]",
     ]
     bar = progressbar.ProgressBar(widgets=widgets, maxval=progress["minion_count"])
     bar.start()

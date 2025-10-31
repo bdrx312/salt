@@ -571,7 +571,7 @@ class SaltStackVersion:
             noc = "0na"
         if noc and self.sha:
             parts.extend([f"noc={noc}", f"sha={self.sha}"])
-        return "<{} {}>".format(self.__class__.__name__, " ".join(parts))
+        return f"<{self.__class__.__name__} {' '.join(parts)}>"
 
 
 # ----- Hardcoded Salt Codename Version Information ----------------------------------------------------------------->

@@ -143,7 +143,7 @@ class Beacon:
                     error = f"{sys.exc_info()[1]}"
                     log.error("Unable to start %s beacon, %s", mod, error)
                     # send beacon error event
-                    tag = "salt/beacon/{}/{}/".format(self.opts["id"], mod)
+                    tag = f"salt/beacon/{self.opts['id']}/{mod}/"
                     ret.append(
                         {
                             "tag": tag,
@@ -154,7 +154,7 @@ class Beacon:
                     )
                 if not error:
                     for data in raw:
-                        tag = "salt/beacon/{}/{}/".format(self.opts["id"], mod)
+                        tag = f"salt/beacon/{self.opts['id']}/{mod}/"
                         if "tag" in data:
                             tag += data.pop("tag")
                         if "id" not in data:
@@ -289,7 +289,7 @@ class Beacon:
         List the available beacons
         """
         _beacons = [
-            "{}".format(_beacon.replace(".beacon", ""))
+            f"{_beacon.replace('.beacon', '')}"
             for _beacon in self.beacons
             if ".beacon" in _beacon
         ]
@@ -318,8 +318,8 @@ class Beacon:
             valid, vcomment = self.beacons[validate_str](beacon_data)
         else:
             vcomment = (
-                "Beacon {} does not have a validate"
-                " function, skipping validation.".format(beacon_name)
+                f"Beacon {beacon_name} does not have a validate"
+                " function, skipping validation."
             )
             valid = True
 
@@ -342,8 +342,8 @@ class Beacon:
 
         if name in self._get_beacons(include_opts=False):
             comment = (
-                "Cannot update beacon item {}, "
-                "because it is configured in pillar.".format(name)
+                f"Cannot update beacon item {name}, "
+                "because it is configured in pillar."
             )
             complete = False
         else:
@@ -488,11 +488,7 @@ class Beacon:
         """
 
         if name in self._get_beacons(include_opts=False):
-            comment = (
-                "Cannot disable beacon item {}, it is configured in pillar.".format(
-                    name
-                )
-            )
+            comment = f"Cannot disable beacon item {name}, it is configured in pillar."
             complete = False
         else:
             self._update_enabled(name, False)

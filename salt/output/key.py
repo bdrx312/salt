@@ -38,21 +38,11 @@ def output(data, **kwargs):  # pylint: disable=unused-argument
         }
 
         trans = {
-            pend: "{}{}Unaccepted Keys:{}".format(
-                " " * ident, color["LIGHT_RED"], color["ENDC"]
-            ),
-            acc: "{}{}Accepted Keys:{}".format(
-                " " * ident, color["LIGHT_GREEN"], color["ENDC"]
-            ),
-            den: "{}{}Denied Keys:{}".format(
-                " " * ident, color["LIGHT_MAGENTA"], color["ENDC"]
-            ),
-            rej: "{}{}Rejected Keys:{}".format(
-                " " * ident, color["LIGHT_BLUE"], color["ENDC"]
-            ),
-            "local": "{}{}Local Keys:{}".format(
-                " " * ident, color["LIGHT_MAGENTA"], color["ENDC"]
-            ),
+            pend: f'{" " * ident}{color["LIGHT_RED"]}Unaccepted Keys:{color["ENDC"]}',
+            acc: f'{" " * ident}{color["LIGHT_GREEN"]}Accepted Keys:{color["ENDC"]}',
+            den: f'{" " * ident}{color["LIGHT_MAGENTA"]}Denied Keys:{color["ENDC"]}',
+            rej: f'{" " * ident}{color["LIGHT_BLUE"]}Rejected Keys:{color["ENDC"]}',
+            "local": f'{" " * ident}{color["LIGHT_MAGENTA"]}Local Keys:{color["ENDC"]}',
         }
     else:
         acc = "accepted"
@@ -67,18 +57,10 @@ def output(data, **kwargs):  # pylint: disable=unused-argument
         }
 
         trans = {
-            pend: "{}{}Unaccepted Keys:{}".format(
-                " " * ident, color["LIGHT_RED"], color["ENDC"]
-            ),
-            acc: "{}{}Accepted Keys:{}".format(
-                " " * ident, color["LIGHT_GREEN"], color["ENDC"]
-            ),
-            rej: "{}{}Rejected Keys:{}".format(
-                " " * ident, color["LIGHT_BLUE"], color["ENDC"]
-            ),
-            "local": "{}{}Local Keys:{}".format(
-                " " * ident, color["LIGHT_MAGENTA"], color["ENDC"]
-            ),
+            pend: f'{" " * ident}{color["LIGHT_RED"]}Unaccepted Keys:{color["ENDC"]}',
+            acc: f'{" " * ident}{color["LIGHT_GREEN"]}Accepted Keys:{color["ENDC"]}',
+            rej: f'{" " * ident}{color["LIGHT_BLUE"]}Rejected Keys:{color["ENDC"]}',
+            "local": f'{" " * ident}{color["LIGHT_MAGENTA"]}Local Keys:{color["ENDC"]}',
         }
 
     ret = ""
@@ -89,11 +71,7 @@ def output(data, **kwargs):  # pylint: disable=unused-argument
             key = salt.utils.data.decode(key)
             skey = salt.output.strip_esc_sequence(key) if strip_colors else key
             if isinstance(data[status], list):
-                ret += "{}{}{}{}\n".format(
-                    " " * ident, cmap[status], skey, color["ENDC"]
-                )
+                ret += f'{" " * ident}{cmap[status]}{skey}{color["ENDC"]}\n'
             if isinstance(data[status], dict):
-                ret += "{}{}{}:  {}{}\n".format(
-                    " " * ident, cmap[status], skey, data[status][key], color["ENDC"]
-                )
+                ret += f'{" " * ident}{cmap[status]}{skey}:  {data[status][key]}{color["ENDC"]}\n'
     return ret

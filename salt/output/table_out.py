@@ -106,14 +106,11 @@ class TableDisplay:
             endc = self.ENDC  # pylint: disable=no-member
 
         indent *= " "
-        fmt = "{0}{1}{2}{3}{4}{5}"
 
         try:
-            return fmt.format(indent, color, prefix, msg, endc, suffix)
+            return f"{indent}{color}{prefix}{msg}{endc}{suffix}"
         except UnicodeDecodeError:
-            return fmt.format(
-                indent, color, prefix, salt.utils.data.decode(msg), endc, suffix
-            )
+            return f"{indent}{color}{prefix}{salt.utils.data.decode(msg)}{endc}{suffix}"
 
     def wrap_onspace(self, text):
         """

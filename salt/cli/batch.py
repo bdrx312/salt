@@ -113,8 +113,8 @@ class Batch:
         except ValueError:
             if not self.quiet:
                 salt.utils.stringutils.print_cli(
-                    "Invalid batch data sent: {}\nData must be in the "
-                    "form of %10, 10% or 3".format(self.opts["batch"])
+                    f"Invalid batch data sent: {self.opts['batch']}\nData must be in the "
+                    "form of %10, 10% or 3"
                 )
 
     def __update_wait(self, wait):
@@ -169,9 +169,7 @@ class Batch:
             # the user we won't be attempting to run a job on them
             for down_minion in self.down_minions:
                 salt.utils.stringutils.print_cli(
-                    "Minion {} did not respond. No job will be sent.".format(
-                        down_minion
-                    )
+                    f"Minion {down_minion} did not respond. No job will be sent."
                 )
 
         # Iterate while we still have things to execute
@@ -251,8 +249,8 @@ class Batch:
                                 )
                             else:
                                 salt.utils.stringutils.print_cli(
-                                    "minion {} was already deleted from tracker,"
-                                    " probably a duplicate key".format(part["id"])
+                                    f"minion {part['id']} was already deleted from tracker,"
+                                    " probably a duplicate key"
                                 )
                         else:
                             parts.update(part)
@@ -261,8 +259,8 @@ class Batch:
                                     minion_tracker[queue]["minions"].remove(id)
                                 else:
                                     salt.utils.stringutils.print_cli(
-                                        "minion {} was already deleted from tracker,"
-                                        " probably a duplicate key".format(id)
+                                        f"minion {id} was already deleted from tracker,"
+                                        " probably a duplicate key"
                                     )
                 except StopIteration:
                     # if a iterator is done:

@@ -58,6 +58,6 @@ def beacon(config):
     # to block.
     config = salt.utils.beacons.list_to_dict(config)
 
-    beacon_url = "{}{}".format(__opts__["proxy"]["url"], config["endpoint"])
+    beacon_url = f"{__opts__['proxy']['url']}{config['endpoint']}"
     ret = salt.utils.http.query(beacon_url, decode_type="json", decode=True)
     return [ret["dict"]]

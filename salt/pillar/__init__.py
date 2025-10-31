@@ -199,9 +199,7 @@ class RemotePillarMixin:
 
     def validate_return(self, data):
         if not isinstance(data, dict):
-            msg = "Got a bad pillar from master, type {}, expecting dict: {}".format(
-                type(data).__name__, data
-            )
+            msg = f"Got a bad pillar from master, type {type(data).__name__}, expecting dict: {data}"
             log.error(msg)
             # raise an exception! Pillar isn't empty, we can't sync it!
             raise SaltClientError(msg)
@@ -789,9 +787,7 @@ class Pillar:
                         )
                     except Exception as exc:  # pylint: disable=broad-except
                         errors.append(
-                            "Rendering Top file {} failed, render error:\n{}".format(
-                                sls, exc
-                            )
+                            f"Rendering Top file {sls} failed, render error:\n{exc}"
                         )
                     done[saltenv].append(sls)
             for saltenv in pops:
@@ -918,14 +914,14 @@ class Pillar:
                 return None, mods, errors
             elif self.opts["pillar_roots"].get(saltenv):
                 msg = (
-                    "Specified SLS '{}' in environment '{}' is not"
-                    " available on the salt master".format(sls, saltenv)
+                    f"Specified SLS '{sls}' in environment '{saltenv}' is not"
+                    " available on the salt master"
                 )
                 log.error(msg)
                 errors.append(msg)
             else:
-                msg = "Specified SLS '{}' in environment '{}' was not found. ".format(
-                    sls, saltenv
+                msg = (
+                    f"Specified SLS '{sls}' in environment '{saltenv}' was not found. "
                 )
                 if self.opts.get("__git_pillar", False) is True:
                     msg += (
@@ -936,11 +932,11 @@ class Pillar:
                     )
                 else:
                     msg += (
-                        "This could be because SLS '{0}' is in an "
-                        "environment other than '{1}', but '{1}' is "
+                        f"This could be because SLS '{sls}' is in an "
+                        f"environment other than '{saltenv}', but '{saltenv}' is "
                         "included in that environment's Pillar top file. It "
-                        "could also be due to environment '{1}' not being "
-                        "defined in 'pillar_roots'.".format(sls, saltenv)
+                        f"could also be due to environment '{saltenv}' not being "
+                        "defined in 'pillar_roots'."
                     )
                 log.debug(msg)
                 # return state, mods, errors
@@ -963,8 +959,8 @@ class Pillar:
             log.critical(msg, exc_info=True)
             if self.opts.get("pillar_safe_render_error", True):
                 errors.append(
-                    "Rendering SLS '{}' failed. Please see master log for "
-                    "details.".format(sls)
+                    f"Rendering SLS '{sls}' failed. Please see master log for "
+                    "details."
                 )
             else:
                 errors.append(msg)
@@ -979,8 +975,8 @@ class Pillar:
                 if "include" in state:
                     if not isinstance(state["include"], list):
                         msg = (
-                            "Include Declaration in SLS '{}' is not "
-                            "formed as a list".format(sls)
+                            f"Include Declaration in SLS '{sls}' is not "
+                            "formed as a list"
                         )
                         log.error(msg)
                         errors.append(msg)
@@ -1016,7 +1012,7 @@ class Pillar:
                                 errors.extend(
                                     [
                                         "No matching pillar environment for environment"
-                                        " '{}' found".format(saltenv)
+                                        f" '{saltenv}' found"
                                     ]
                                 )
                                 matched_pstates = [sub_sls]
@@ -1087,7 +1083,7 @@ class Pillar:
                     errors.extend(
                         [
                             "No matching pillar environment for environment "
-                            "'{}' found".format(saltenv)
+                            f"'{saltenv}' found"
                         ]
                     )
                 if matched_pstates:
@@ -1222,12 +1218,7 @@ class Pillar:
                 try:
                     ext = self._external_pillar_data(pillar, val, key)
                 except Exception as exc:  # pylint: disable=broad-except
-                    errors.append(
-                        "Failed to load ext_pillar {}: {}".format(
-                            key,
-                            exc,
-                        )
-                    )
+                    errors.append(f"Failed to load ext_pillar {key}: {exc}")
                     log.error(
                         "Exception caught loading ext_pillar '%s':\n%s",
                         key,

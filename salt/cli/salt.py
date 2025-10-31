@@ -346,15 +346,15 @@ class SaltCMD(salt.utils.parsers.SaltCMDOptionParser):
         if self.options.verbose:
             if not_connected_minions:
                 salt.utils.stringutils.print_cli(
-                    "Minions not connected: {}".format(" ".join(not_connected_minions))
+                    f"Minions not connected: {' '.join(not_connected_minions)}"
                 )
             if not_response_minions:
                 salt.utils.stringutils.print_cli(
-                    "Minions not responding: {}".format(" ".join(not_response_minions))
+                    f"Minions not responding: {' '.join(not_response_minions)}"
                 )
             if failed_minions:
                 salt.utils.stringutils.print_cli(
-                    "Minions with failures: {}".format(" ".join(failed_minions))
+                    f"Minions with failures: {' '.join(failed_minions)}"
                 )
         salt.utils.stringutils.print_cli("-------------------------------------------")
 
@@ -429,9 +429,7 @@ class SaltCMD(salt.utils.parsers.SaltCMDOptionParser):
 
     def _format_error(self, minion_error):
         for minion, error_doc in minion_error.items():
-            error = "Minion [{}] encountered exception '{}'".format(
-                minion, error_doc["message"]
-            )
+            error = f"Minion [{minion}] encountered exception '{error_doc['message']}'"
         return error
 
     def _print_docs(self, ret):

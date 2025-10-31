@@ -410,10 +410,8 @@ class Minion(
         super().shutdown(
             exitcode,
             (
-                "The Salt {} is shutdown. {}".format(
-                    self.__class__.__name__, (exitmsg or "")
-                ).strip()
-            ),
+                f"The Salt {self.__class__.__name__} is shutdown. {exitmsg or ''}"
+            ).strip(),
         )
 
     # pylint: enable=no-member
@@ -491,7 +489,7 @@ class ProxyMinion(
         except OSError as error:
             self.environment_failure(error)
 
-        self.action_log_info('Setting up "{}"'.format(self.config["id"]))
+        self.action_log_info(f'Setting up "{self.config["id"]}"')
 
         migrations.migrate_paths(self.config)
 
@@ -555,10 +553,8 @@ class ProxyMinion(
         super().shutdown(
             exitcode,
             (
-                "The Salt {} is shutdown. {}".format(
-                    self.__class__.__name__, (exitmsg or "")
-                ).strip()
-            ),
+                f"The Salt {self.__class__.__name__} is shutdown. {(exitmsg or '')}"
+            ).strip(),
         )
 
     # pylint: enable=no-member
@@ -596,7 +592,7 @@ class Syndic(
         except OSError as error:
             self.environment_failure(error)
 
-        self.action_log_info('Setting up "{}"'.format(self.config["id"]))
+        self.action_log_info(f'Setting up "{self.config["id"]}"')
 
         # Late import so logging works correctly
         import salt.minion
@@ -636,8 +632,6 @@ class Syndic(
         super().shutdown(
             exitcode,
             (
-                "The Salt {} is shutdown. {}".format(
-                    self.__class__.__name__, (exitmsg or "")
-                ).strip()
-            ),
+                f"The Salt {self.__class__.__name__} is shutdown. {(exitmsg or '')}"
+            ).strip(),
         )

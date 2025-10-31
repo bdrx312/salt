@@ -196,7 +196,7 @@ class SyncClientMixin(ClientStateMixin):
             )
             if ret is None:
                 raise salt.exceptions.SaltClientTimeout(
-                    "RunnerClient job '{}' timed out".format(job["jid"]),
+                    f"RunnerClient job '{job['jid']}' timed out",
                     jid=job["jid"],
                 )
 
@@ -387,9 +387,7 @@ class SyncClientMixin(ClientStateMixin):
                     data["return"] = func(*args, **kwargs)
                 except TypeError as exc:
                     data["return"] = (
-                        "\nPassed invalid arguments: {}\n\nUsage:\n{}".format(
-                            exc, func.__doc__
-                        )
+                        f"\nPassed invalid arguments: {exc}\n\nUsage:\n{func.__doc__}"
                     )
                 try:
                     data["success"] = self.context.get("retcode", 0) == 0
@@ -405,10 +403,8 @@ class SyncClientMixin(ClientStateMixin):
                 if isinstance(ex, salt.exceptions.NotImplemented):
                     data["return"] = str(ex)
                 else:
-                    data["return"] = "Exception occurred in {} {}: {}".format(
-                        self.client,
-                        fun,
-                        traceback.format_exc(),
+                    data["return"] = (
+                        f"Exception occurred in {self.client} {fun}: {traceback.format_exc()}"
                     )
                 data["success"] = False
                 data["retcode"] = 1
@@ -598,9 +594,7 @@ class AsyncClientMixin(ClientStateMixin):
         with salt.utils.process.default_signals(signal.SIGINT, signal.SIGTERM):
             proc = salt.utils.process.SignalHandlingProcess(
                 target=proc_func,
-                name="ProcessFunc({}, fun={} jid={})".format(
-                    proc_func.__qualname__, fun, async_pub["jid"]
-                ),
+                name=f"ProcessFunc({proc_func.__qualname__}, fun={fun} jid={async_pub['jid']})",
                 kwargs=dict(
                     instance=instance,
                     opts=self.opts,

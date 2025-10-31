@@ -148,8 +148,8 @@ class RotatingFileHandler(
                 ):
                     if self.level <= logging.WARNING:
                         sys.stderr.write(
-                            '[WARNING ] Unable to rotate the log file "{}" '
-                            "because it is in use\n".format(self.baseFilename)
+                            f'[WARNING ] Unable to rotate the log file "{self.baseFilename}" '
+                            "because it is in use\n"
                         )
                     handled = True
             finally:

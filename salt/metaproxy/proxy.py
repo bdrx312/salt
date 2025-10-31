@@ -173,9 +173,7 @@ def post_master_init(self, master):
         or f"{fq_proxyname}.shutdown" not in self.proxy
     ):
         errmsg = (
-            "Proxymodule {} is missing an init() or a shutdown() or both. ".format(
-                fq_proxyname
-            )
+            f"Proxymodule {fq_proxyname} is missing an init() or a shutdown() or both. "
             + "Check your proxymodule.  Salt-proxy aborted."
         )
         log.error(errmsg)
@@ -402,9 +400,7 @@ def thread_return(cls, minion_instance, opts, data):
     """
     fn_ = os.path.join(minion_instance.proc_dir, data["jid"])
 
-    salt.utils.process.appendproctitle(
-        "{}._thread_return {}".format(cls.__name__, data["jid"])
-    )
+    salt.utils.process.appendproctitle(f"{cls.__name__}._thread_return {data['jid']}")
 
     sdata = {"pid": os.getpid()}
     sdata.update(data)
@@ -469,8 +465,8 @@ def thread_return(cls, minion_instance, opts, data):
                 executors = [executors]
             elif not isinstance(executors, list) or not executors:
                 raise SaltInvocationError(
-                    "Wrong executors specification: {}. String or non-empty list"
-                    " expected".format(executors)
+                    f"Wrong executors specification: {executors}. String or non-empty list"
+                    " expected"
                 )
             if opts.get("sudo_user", "") and executors[-1] != "sudo":
                 executors[-1] = "sudo"  # replace the last one with sudo
@@ -549,9 +545,7 @@ def thread_return(cls, minion_instance, opts, data):
             ret["out"] = "nested"
             ret["retcode"] = salt.defaults.exitcodes.EX_GENERIC
         except TypeError as exc:
-            msg = "Passed invalid arguments to {}: {}\n{}".format(
-                function_name, exc, func.__doc__ or ""
-            )
+            msg = f"Passed invalid arguments to {function_name}: {exc}\n{func.__doc__ or ''}"
             log.warning(msg, exc_info_on_loglevel=logging.DEBUG)
             ret["return"] = msg
             ret["out"] = "nested"
@@ -576,9 +570,9 @@ def thread_return(cls, minion_instance, opts, data):
             ret["return"] = minion_instance.functions.missing_fun_string(function_name)
             mod_name = function_name.split(".")[0]
             if mod_name in minion_instance.function_errors:
-                ret["return"] += " Possible reasons: '{}'".format(
-                    minion_instance.function_errors[mod_name]
-                )
+                ret[
+                    "return"
+                ] += f" Possible reasons: '{minion_instance.function_errors[mod_name]}'"
         ret["success"] = False
         ret["retcode"] = salt.defaults.exitcodes.EX_GENERIC
         ret["out"] = "nested"
@@ -638,7 +632,7 @@ def thread_multi_return(cls, minion_instance, opts, data):
     fn_ = os.path.join(minion_instance.proc_dir, data["jid"])
 
     salt.utils.process.appendproctitle(
-        "{}._thread_multi_return {}".format(cls.__name__, data["jid"])
+        f"{cls.__name__}._thread_multi_return {data['jid']}"
     )
 
     sdata = {"pid": os.getpid()}
@@ -817,7 +811,7 @@ async def handle_decoded_payload(self, data):
     # side.
     instance = self
     multiprocessing_enabled = self.opts.get("multiprocessing", True)
-    name = "ProcessPayload(jid={})".format(data["jid"])
+    name = f"ProcessPayload(jid={data['jid']})"
     creds_map = None
     if multiprocessing_enabled:
         if salt.utils.platform.spawning_platform():
@@ -862,7 +856,7 @@ def target_load(self, load):
     # pre-processing on the master and this minion should not see the
     # publication if the master does not determine that it should.
     if "tgt_type" in load:
-        match_func = self.matchers.get("{}_match.match".format(load["tgt_type"]), None)
+        match_func = self.matchers.get(f"{load['tgt_type']}_match.match", None)
         if match_func is None:
             return False
         if load["tgt_type"] in ("grain", "grain_pcre", "pillar"):

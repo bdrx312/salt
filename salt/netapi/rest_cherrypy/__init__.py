@@ -44,9 +44,7 @@ def __virtual__():
             if "cherrypy" in globals() and Version(cherrypy.__version__) < Version(
                 cpy_min
             ):
-                error_msg = "Required version of CherryPy is {} or greater.".format(
-                    cpy_min
-                )
+                error_msg = f"Required version of CherryPy is {cpy_min} or greater."
             else:
                 error_msg = cpy_error
 

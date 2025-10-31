@@ -138,9 +138,9 @@ def _module_dirs(
 
     if not sys_types[0].startswith(SALT_INTERNAL_LOADERS_PATHS):
         raise RuntimeError(
-            "{!r} is not considered a salt internal loader path. If this "
+            f"{sys_types[0].__name__!r} is not considered a salt internal loader path. If this "
             "is a new loader being added, please also add it to "
-            "{}.SALT_INTERNAL_LOADERS_PATHS.".format(sys_types[0], __name__)
+            f"{sys_types[0].__name__}.SALT_INTERNAL_LOADERS_PATHS."
         )
 
     ext_type_types = []
@@ -227,9 +227,7 @@ def _module_dirs(
                 else:
                     with catch_entry_points_exception(entry_point):
                         raise ValueError(
-                            "Don't know how to load a salt extension from {}".format(
-                                loaded_entry_point
-                            )
+                            f"Don't know how to load a salt extension from {loaded_entry_point}"
                         )
 
                 # Finally, we check all paths that we collected to see if they exist
@@ -353,7 +351,7 @@ def minion_mods(
             else:
                 if funcs:
                     for func in funcs:
-                        f_key = "{}{}".format(mod, func[func.rindex(".") :])
+                        f_key = f"{mod}{func[func.rindex('.') :]}"
                         ret[f_key] = funcs[func]
 
     if notify:
@@ -975,8 +973,8 @@ def render(
         opts["renderer"], rend, opts["renderer_blacklist"], opts["renderer_whitelist"]
     ):
         err = (
-            "The renderer {} is unavailable, this error is often because "
-            "the needed software is unavailable".format(opts["renderer"])
+            f"The renderer {opts['renderer']} is unavailable, this error is often because "
+            "the needed software is unavailable"
         )
         log.critical(err)
         if opts.get("__role") == "minion":

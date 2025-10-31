@@ -73,9 +73,7 @@ class OutputUnifier:
                 if val not in result:
                     missing.append(val)
             if missing:
-                err_msg = "The following keys were not present in the state return: {}.".format(
-                    ", ".join(missing)
-                )
+                err_msg = f"The following keys were not present in the state return: {', '.join(missing)}."
             else:
                 err_msg = None
 

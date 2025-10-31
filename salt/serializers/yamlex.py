@@ -233,9 +233,7 @@ class Loader(BaseLoader):  # pylint: disable=W0232
                 hash(key)
             except TypeError:
                 raise ConstructorError(
-                    "While constructing a mapping {} found unacceptable key {}".format(
-                        node.start_mark, key_node.start_mark
-                    )
+                    f"While constructing a mapping {node.start_mark} found unacceptable key {key_node.start_mark}"
                 )
             value = self.construct_object(value_node, deep=False)
             if key in sls_map and not reset:
